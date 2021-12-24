@@ -22,13 +22,9 @@
   (-> (listof exact-integer?) exact-integer? (listof exact-integer?))
   (val-indices nums (get-vals nums target)))
 
-
-(define exls '(2 7 11 15))
-(define exls2 '(3 2 4))
-(define exls3 '(3 3))
-(define exls4 '(2 5 5 11))
-
-(two-sum exls 9)
-(two-sum exls2 6)
-(two-sum exls3 6)
-(two-sum exls4 10)
+(module+ test
+  (require rackunit)
+  (check-equal? (two-sum '(2 7 11 15) 9) '(0 1))
+  (check-equal? (two-sum '(3 2 4) 6) '(1 2))
+  (check-equal? (two-sum '(3 3) 6) '(0 1))
+  (check-equal? (two-sum '(2 5 5 11) 10) '(1 2)))
