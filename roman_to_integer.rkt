@@ -3,6 +3,11 @@
 
 ;; way overthinking it
 
+;; new idea
+;; loop over the string list
+;; if cur and next in dict, add to sum and jump ahead 2
+;; otherwise if cur in dict, add to sum and jump ahead 1
+
 ;; idea
 ;; make a hash map with the basics and the subtraction rules
 ;; parse the string, checking the value and the value ahead
@@ -29,12 +34,12 @@
    'CM 900))
 
 (define (pairwise-slide ls)
-  (if (equal? 1 (length ls))
-      '()
-      (cons
-       (cons (first ls)
-             (first (rest ls)))
-       (pairwise-slide (rest ls)))))
+  (cond [(or (= 1 (length ls))
+             (= 2 (length ls))) (list ls)]
+        [(cons
+          (cons (first ls)
+                (first (rest ls)))
+          (pairwise-slide (rest ls)))]))
 
 ;; if the concatenation is in pair-rules, then return the number
 ;; otherwise look up the first value in single-rules and add that
@@ -56,8 +61,9 @@
              [val (hash-ref *rules* sym #f)])
         (list 0 sym val)))))
 
-(pairwise-slide (string->list "III"))
-(pairwise-slide (string->list "I"))
+;; (pairwise-slide (string->list "III"))
+;; (pairwise-slide (string->list "I"))
+;; (roman-to-int "IV")
 
 
 (define (check-pairs pairs)
