@@ -56,6 +56,9 @@
              [val (hash-ref *rules* sym #f)])
         (list 0 sym val)))))
 
+(pairwise-slide (string->list "III"))
+(pairwise-slide (string->list "I"))
+
 
 (define (check-pairs pairs)
   (let* ([cur-val (first pairs)]
@@ -75,6 +78,7 @@
 
 (module+ test
   (require rackunit)
+  (check-equal? (roman-to-int "I") 1)
   (check-equal? (roman-to-int "III") 3)
   (check-equal? (roman-to-int "LVIII") 58)
   (check-equal? (roman-to-int "MCMXCIV") 1994))
