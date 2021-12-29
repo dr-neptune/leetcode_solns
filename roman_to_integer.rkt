@@ -1,22 +1,6 @@
 #lang racket
 (require racket)
 
-;; way overthinking it
-
-;; new idea
-;; loop over the string list
-;; if cur and next in dict, add to sum and jump ahead 2
-;; otherwise if cur in dict, add to sum and jump ahead 1
-
-;; idea
-;; make a hash map with the basics and the subtraction rules
-;; parse the string, checking the value and the value ahead
-;; if none of the subtraction rules hold for the next 2 digits,
-;; take the current value and add it to the total. Otherwise
-;; take the subtraction value and add it to the total and move
-;; ahead 2 values
-
-;; define immutable hash tables
 (define *rules*
   (hash
    'I 1
@@ -33,53 +17,31 @@
    'CD 400
    'CM 900))
 
-(define (pairwise-slide ls)
-  (cond [(or (= 1 (length ls))
-             (= 2 (length ls))) (list ls)]
-        [(cons
-          (cons (first ls)
-                (first (rest ls)))
-          (pairwise-slide (rest ls)))]))
 
-;; if the concatenation is in pair-rules, then return the number
-;; otherwise look up the first value in single-rules and add that
-(define example (pairwise-slide (string->list "MCMXCIV")))
-
-
-(define (char->symbol pr)
-  (match pr
-    [(cons a b) (string->symbol (string a b))]
-    [a (string->symbol (string a))]))
-
-
-(define (check-dict tuple)
-  (let* ([sym (char->symbol tuple)]
-         [val (hash-ref *rules* sym #f)])
-  (if val
-      (list 1 sym val)
-      (let* ([sym (char->symbol (car tuple))]
-             [val (hash-ref *rules* sym #f)])
-        (list 0 sym val)))))
-
-;; (pairwise-slide (string->list "III"))
-;; (pairwise-slide (string->list "I"))
-;; (roman-to-int "IV")
-
-
-(define (check-pairs pairs)
-  (let* ([cur-val (first pairs)]
-         [dict-result (check-dict cur-val)])
-    (cond [(= 1 (length pairs)) (list dict-result)]
-          [(= 1 (first dict-result))
-           (cons dict-result
-                 (check-pairs (cddr pairs)))]
-          [(cons dict-result
-                 (check-pairs (cdr pairs)))])))
+(define (char->symbol chrs)
+  "Converts character(s) or lists of character(s) to a symbol"
+  (match chrs
+    [(or (list a b) (cons a b)) (string->symbol (string a b))]
+    [(or a (list a)) (string->symbol (string a))]))
 
 
 (define (roman-to-int str)
-  (let ([pairs (pairwise-slide (string->list str))])
-    (foldl + 0 (map last (check-pairs pairs)))))
+  (define (roman->int slist [val 0])
+    "traverse the string list, checking against the *rules* and add up the returned values"
+    (let ([two-char (if (>= (length slist) 2)
+                        (hash-ref *rules* (char->symbol (take slist 2)) #f)
+                        #f)]
+          [one-char (if (>= (length slist) 1)
+                        (hash-ref *rules* (char->symbol (first slist)))
+                        #f)])
+      (cond [(empty? slist) val]
+            ;; check for 2 rules (IV, CM, etc). If found, move ahead 2
+            [two-char
+             (roman->int (drop slist 2) (+ val two-char))]
+            ;; otherwise return a single rule
+            [one-char
+             (roman->int (rest slist) (+ val one-char))])))
+  (roman->int (string->list str)))
 
 
 (module+ test
