@@ -6,7 +6,8 @@
 (define exls2 '(2 5 6))
 (define n 3)
 
-;; this is correct, but the answer expects it to be in place and use nums1 as a container
+;; this is a correct output, but the answer expects it to be in place and use nums1 as a container
+;; so it is not a correct solution
 (define (merge nums1 m nums2 n)
   (define (mesh ls1 ls2)
     (cond [(empty? ls1) ls2]
@@ -18,5 +19,3 @@
   (mesh (take nums1 m) nums2))
 
 (merge exls1 m exls2 n)
-
-;; hacky workaround because in-place seems weird to me
