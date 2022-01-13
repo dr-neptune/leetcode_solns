@@ -18,7 +18,27 @@
 (define extree2 (tree-node 1 (make-tree-node 2)
                            (make-tree-node 3)))
 
+(define extree3 (tree-node 1 (make-tree-node 2) #f))
+
 ;; idea
-;; depth first search
 ;; for each jump, subtract the node amounts from the desired sum
-;; if sum == 0, return #t
+;; if sum == val, return #t
+(define (leaf-node? tree)
+  (and (false? (tree-node-left tree))
+       (false? (tree-node-right tree))))
+
+
+(define (has-path-sum root targetSum)
+  (cond [(not (tree-node? root)) #f]
+        [(and (= (tree-node-val root) targetSum)
+              (leaf-node? root)) #t]
+        [else (or (has-path-sum (tree-node-left root) (- targetSum (tree-node-val root)))
+                  (has-path-sum (tree-node-right root) (- targetSum (tree-node-val root))))]))
+
+
+(module+ test
+  (require rackunit)
+  (check-true (has-path-sum extree 22))
+  (check-false (has-path-sum extree2 5))
+  (check-false (has-path-sum '() 0))
+  (check-false (has-path-sum extree3 1)))
