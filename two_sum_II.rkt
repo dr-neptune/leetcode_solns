@@ -1,20 +1,14 @@
 #lang racket
 (require racket)
 
-(define (two-sum numbers target)
-  (let ([results (make-hash)])
-    (for-each
-     (lambda (v)
-       (let ([val (hash-ref results (first v) #f)])
-         (if val
-             (list (add1 val) (second v))
-             (hash-update! results (- target val) (second v)))))
-     (enumerate numbers))))
+;; two pointers
+(define (two-sum numbers target [l 0] [r (sub1 (length numbers))])
+  (if (< l r)
+      (let ([s (+ (list-ref numbers l) (list-ref numbers r))])
+        (cond [(= s target) (map add1 (list l r))]
+              [(< s target) (two-sum numbers target (add1 l) r)]
+              [else (two-sum numbers target l (sub1 r))])) #f))
 
 (two-sum '(2 7 11 15) 9)
-
-(define (enumerate ls [idx 0])
-  (if (empty? ls)
-      '()
-      (cons (list (first ls) idx)
-            (enumerate (rest ls) (add1 idx)))))
+(two-sum '(2 3 4) 6)
+(two-sum '(-1 0) -1)

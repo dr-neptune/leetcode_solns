@@ -22,6 +22,7 @@
   (-> (listof exact-integer?) exact-integer? (listof exact-integer?))
   (val-indices nums (get-vals nums target)))
 
+
 (module+ test
   (require rackunit)
   (check-equal? (two-sum '(2 7 11 15) 9) '(0 1))
