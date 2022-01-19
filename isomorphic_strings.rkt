@@ -50,26 +50,64 @@
         [(and (hash-has-key? dict fstr)
               (not (equal? (hash-ref dict fstr) sstr))) #f]
         [else
-         (begin (hash-update! dict fstr sstr)
+         (begin (hash-set! dict fstr sstr)
                 #t)]))
+
 
 
 (define dict (make-hash))
 
+(str-dict-compare #\b #\b dict)
+
+(str-dict-compare #\a #\a dict)
+
+(str-dict-compare #\d #\b dict)
+
+(str-dict-compare #\c #\a dict)
+
 (str-dict-compare #\p #\t dict)
+
+(str-dict-compare #\a #\i dict)
+
+(str-dict-compare #\p #\t dict)
+
+(str-dict-compare #\e #\l dict)
+
+(str-dict-compare #\r #\e dict)
+
+(str-dict-compare #\p #\s dict)
+
+
+(define (str-dict-compare fstr sstr dict)
+  (cond [(and (hash-has-key? dict sstr)
+              (equal? (hash-ref dict sstr) fstr)) #t]
+        [(and (hash-has-key? dict sstr)
+              (not (equal? (hash-ref dict sstr) fstr))) #f]
+        [else
+         (begin (hash-set! dict sstr fstr)
+                #t)]))
+
+(define (is-isomorphic s t)
+  (let through ([fstr (string->list s)]
+                [sstr (string->list t)]
+                [dict (make-hash)])
+    (cond [(empty? fstr) #t]
+          [(false? (str-dict-compare (first fstr) (first sstr) dict)) #f]
+          [else (through (rest fstr) (rest sstr) dict)])))
 
 
 (is-isomorphic exstr1 exstr2)
+(is-isomorphic "foo" "bar")
+(is-isomorphic "egg" "add")
+(is-isomorphic "" "")
+(is-isomorphic "badc" "baba")
+
 
 
 (define exstr1 "paper")
 (define exstr2 "title")
 
-(first (map list (string->list exstr1)
-            (string->list exstr2)))
-
-(define example-duo
-  (map list (string->list exstr1)
-            (string->list exstr2)))
-
-(rest (rest (rest (rest (rest example-duo)))))
+;; idea
+;; add all second string items as keys
+;; add maps from first
+;; if there is a collision

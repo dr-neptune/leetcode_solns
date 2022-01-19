@@ -29,7 +29,7 @@
             (build-up-list (rest numbers) value)))))
   (cond [(empty? numbers) '()]
         [(= 1 (length numbers)) (make-list-node (first numbers))]
-        [else (build-up-list (rest (reverse numbers)) (make-list-node (last numbers)))]))
+        [else (build-up-list (rest (reverse numbers)) (make-list-node (last numbers)))]))o
 
 
 (define (merge-two-lists list1 list2)

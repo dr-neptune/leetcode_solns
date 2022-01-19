@@ -14,8 +14,7 @@
 (define exll2 (numbers->linked-list '(7 7 7 7)))
 
 ;; beautiful solutions by Oleg Nizhnik
-;; https://leetcode.com/problems/remove-linked-list-elements/discuss/1573534/racket-let-tail-recursion-match-simple-and-o1-memory
-(define (remove-elements head val)
+;; https://leetcode.com/problems/remove-linked-list-elements/discuss/1573534/racket-let-tail-recursion-match-simple-and-o1-memory(define (remove-elements head val)
   (let go ([lst head] [acc null])
     (match lst
            [(list-node h rest) (go rest (if (= h val) acc (cons h acc)))]
@@ -24,7 +23,6 @@
 
 (remove-elements exll 6)
 (remove-elements exll2 7)
-
 
 ;; other solutions
 
