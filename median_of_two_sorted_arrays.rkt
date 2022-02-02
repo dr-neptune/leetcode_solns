@@ -23,9 +23,32 @@
 (define (find-median-sorted-arrays nums1 nums2)
   (quickselect-median (append nums1 nums2)))
 
+(define (find-median-sorted-arrays nums1 nums2)
+  (/ 2 (+ (quickselect-median nums1)
+          (quickselect-median nums2))))
+
+
 (define exls1 '(9 1 0 2 3 4 6 8 7 10 5))
 
 (quickselect-median exls1)
 
 (find-median-sorted-arrays '(1 3) '(2))
+
 (find-median-sorted-arrays '(1 2) '(3 4))
+
+
+;; idea
+;; grab medians of each list, compare those
+;; then take the median of those
+
+(define (find-median-sorted-arrays nums1 nums2)
+  (let* ([ls (append nums1 nums2)]
+         [x (sort ls <)])
+    (if (= 1 (quotient (length x) 2))
+        (list-ref x (quotient (length x) 2))
+        (/ (+ (list-ref x (- (quotient (length x) 2) 1))
+              (list-ref x (quotient (length x) 2)))
+           2))))
+
+
+(find-median-sorted-arrays '(1 3) '(2))

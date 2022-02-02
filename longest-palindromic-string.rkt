@@ -34,3 +34,43 @@
 (longest-palindrome exstr1)
 (longest-palindrome exstr2)
 (longest-palindrome exstr3)
+
+;; now add dynamic programming
+(define-syntax define/memoized
+  (syntax-rules ()
+    [(_ (f args ...) bodies ...)
+     (define f
+       (let ([results (make-hash)])
+         (lambda (args ...)
+           ((lambda vals
+              (when (not (hash-has-key? results vals))
+                (hash-set! results vals (begin bodies ...)))
+              (hash-ref results vals))
+            args ...))))]))
+
+(define/memoized (longest-palindrome s)
+  (let ([largest '(0 0)])
+    (for ([val (in-list (all-slides (string->list s)))])
+      (when (is-palindrome val)
+        (when (> (length val) (first largest))
+          (set! largest (list (length val) val)))))
+    (list->string (second largest))))
+
+
+
+
+(define exstr4 "civilwartestingwhetherthatnaptionoranynartionsoconceivedandsodedicatedcanlongendureWeareqmetonagreatbattlefiemldoftzhatwarWehavecometodedicpateaportionofthatfieldasafinalrestingplaceforthosewhoheregavetheirlivesthatthatnationmightliveItisaltogetherfangandproperthatweshoulddothisButinalargersensewecannotdedicatewecannotconsecratewecannothallowthisgroundThebravelmenlivinganddeadwhostruggledherehaveconsecrateditfaraboveourpoorponwertoaddordetractTgheworldadswfilllittlenotlenorlongrememberwhatwesayherebutitcanneverforgetwhattheydidhereItisforusthelivingrathertobededicatedheretotheulnfinishedworkwhichtheywhofoughtherehavethusfarsonoblyadvancedItisratherforustobeherededicatedtothegreattdafskremainingbeforeusthatfromthesehonoreddeadwetakeincreaseddevotiontothatcauseforwhichtheygavethelastpfullmeasureofdevotionthatweherehighlyresolvethatthesedeadshallnothavediedinvainthatthisnationunsderGodshallhaveanewbirthoffreedomandthatgovernmentofthepeoplebythepeopleforthepeopleshallnotperishfromtheearth")
+
+
+(time (longest-palindrome exstr4))
+
+(define (lp s dict)
+  (let ([largest '(0 0)])
+    (for ([val (in-list (all-slides (string->list s)))])
+      (when (is-palindrome val)
+        (when (> (length val) (first largest))
+          (set! largest (list (length val) val)))))
+    (list->string (second largest))))
+
+
+;; other solution from prikshet21
