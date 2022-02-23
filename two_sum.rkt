@@ -1,5 +1,4 @@
 #lang racket
-
 (require racket)
 
 (define (val-indices ls vals)
