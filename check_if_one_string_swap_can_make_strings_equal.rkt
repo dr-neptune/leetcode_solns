@@ -1,28 +1,18 @@
 #lang racket
 (require racket)
 
-;; given two words
-;; we have a valid single string swap if
-;; traverse both strings as str ls
-;; if same, continue on both
-;; if different continue but add 1 to counter
-;; if at the end of the string the difference count is 2, then #t else #f
+(define (check-rest-for-letter strls1 strls2 char-2 char-1)
+  (let rc ([indices (indexes-of strls1 char-2)])
+    (cond [(empty? indices) #f]
+          [(equal? strls2 (list-set strls1 (first indices) char-1)) #t]
+          [else (rc (rest indices))])))
 
-(define (swap-count sls1 sls2 [num-diffs 0])
-  (cond [(empty? sls1) (quotient num-diffs 2)]
-        [(equal? (first sls1) (first sls2)) (swap-count (rest sls1) (rest sls2) num-diffs)]
-        [(swap-count (rest sls1) (rest sls2) (add1 num-diffs))]))
+(define (union-str-strls str)
+  (if (list? str) str (string->list str)))
 
 (define (are-almost-equal s1 s2)
-  (let ([s1 (string->list s1)] [s2 (string->list s2)])
-    (< 2 (swap-count s1 s2))))
-
-(define exstr1 (string->list "bank"))
-(define exstr2 (string->list "kanb"))
-
-(define (swap-count sls1 sls2 [num-diffs 0])
-  (cond [(empty? sls1) (quotient num-diffs 2)]
-        [(equal? (first sls1) (first sls2)) (swap-count (rest sls1) (rest sls2) num-diffs)]
-        [(swap-count (rest sls1) (rest sls2) (add1 num-diffs))]))
-
-(swap-count exstr1 exstr2)
+  (let* ([s1 (union-str-strls s1)]
+         [s2 (union-str-strls s2)])
+    (cond [(empty? s1) #t]
+          [(char=? (first s1) (first s2)) (are-almost-equal (rest s1) (rest s2))]
+          [else (check-rest-for-letter (rest s1) (rest s2) (first s2) (first s1))])))
