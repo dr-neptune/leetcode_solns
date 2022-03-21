@@ -22,13 +22,15 @@
 
 ;; turns out this is a different leetcode medium problem
 
+
+
 ;; 1 2 3 4 7
 
 ;; recurse to the bottom, and flip left and right
 ;;
 
 (define (invert-tree root)
-  )
+  (cond [(not root) (tree-node-val root)]))
 
 (define (ls->inorder-tree ls)
   ())
