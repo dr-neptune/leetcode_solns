@@ -19,3 +19,13 @@
   (mesh (take nums1 m) nums2))
 
 (merge exls1 m exls2 n)
+
+
+(define (merge-sorted ls1 ls2)
+  (cond [(empty? ls1) ls2]
+        [(empty? ls2) ls1]
+        [(> (first ls1) (first ls2))
+         (cons (first ls2)
+               (merge-sorted ls1 (rest ls2)))]
+        [else (cons (first ls1)
+                    (merge-sorted (rest ls1) ls2))]))
