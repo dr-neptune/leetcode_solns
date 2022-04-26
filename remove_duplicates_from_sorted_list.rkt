@@ -46,3 +46,15 @@
 ;; iterate through list nodes
 ;; if the next value == the current value
 ;; then check the
+
+(define (linked-list->numbers ll)
+  (if (not (list-node? ll))
+      '()
+      (append (list (list-node-val ll))
+              (linked-list->numbers (list-node-next ll)))))
+
+(define (numbers->linked-list numbers)
+  (if (empty? numbers) #f (foldr list-node #f numbers)))
+
+
+(numbers->linked-list '(1 2 3 4 5))

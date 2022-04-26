@@ -22,4 +22,4 @@
 
 (define extree (tree-node 1 #f (tree-node 2 (tree-node 3 #f #f) #f)))
 
-(reverse (inorder-traversal extree))
+(inorder-traversal extree)

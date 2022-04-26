@@ -21,4 +21,11 @@
               (postorder-traversal (tree-node-right root))
               (list (tree-node-val root)))))
 
+(define (postorder-traversal root)
+  (if (not (tree-node? root))
+      '()
+      (cons (postorder-traversal (tree-node-left root))
+            (cons (postorder-traversal (tree-node-right root))
+                  (tree-node-val root)))))
+
 (postorder-traversal extree)
