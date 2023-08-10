@@ -25,3 +25,21 @@
 (find-the-difference exstr1 exstr2)
 
 (find-the-difference "" "y")
+
+
+;; try again
+;; idea
+;; traverse both strings at the same time
+;; if char s != char t, return char t
+(define (find-the-difference s t)
+  (let ([sls (sort (string->list s) char<?)]
+        [tls (sort (string->list t) char<?)])
+    (let loop ([s sls]
+               [t tls])
+      (match (list s t)
+        [(list '() a) (first a)]
+        [(list (list a _ ...) (list a _ ...)) (loop (rest s) (rest t))]
+        [_ (first t)]))))
+
+(find-the-difference "" "t")
+(find-the-difference "abcd" "abcde")

@@ -22,3 +22,9 @@
 (define exstr1 "anagram")
 (define exstr2 "nagaram")
 (is-anagram exstr1 exstr2)
+
+
+;; try again
+(define (is-anagram s t)
+  (let ([sorted-chars (λ (s) (sort (string->list s) char<?))])
+    (equal? (sorted-chars s) (sorted-chars t))))
