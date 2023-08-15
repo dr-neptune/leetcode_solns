@@ -62,3 +62,28 @@
           (rc (rest ls))))))
 
 (two-sum exls 9)
+
+
+;; try again
+;; idea
+;; sort the array of numbers
+;; take the first digit and the last digit
+;; if they add up to target, then return the indices
+;; otherwise
+;; if sum is above target, drop last value
+;; if sum is below target, drop first value
+
+(define exls '(2 7 11 15))
+
+(define (two-sum nums target)
+  (let iter ([nums nums]
+             [li 0] [ri (sub1 (length nums))])
+    (let ([fs (first nums)]
+          [ls (last nums)])
+      (match (- (+ fs ls) target)
+        [0 (list li ri)]
+        [(? negative?) (iter (rest nums) (add1 li) ri)]
+        [(? positive?) (iter (drop-right nums 1) li (sub1 ri))]))))
+
+(two-sum exls 9)
+(two-sum '(3 2 4) 6)
