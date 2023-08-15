@@ -63,7 +63,6 @@
 
 (two-sum exls 9)
 
-
 ;; try again
 ;; idea
 ;; sort the array of numbers
@@ -76,14 +75,22 @@
 (define exls '(2 7 11 15))
 
 (define (two-sum nums target)
-  (let iter ([nums nums]
-             [li 0] [ri (sub1 (length nums))])
-    (let ([fs (first nums)]
-          [ls (last nums)])
-      (match (- (+ fs ls) target)
-        [0 (list li ri)]
-        [(? negative?) (iter (rest nums) (add1 li) ri)]
-        [(? positive?) (iter (drop-right nums 1) li (sub1 ri))]))))
+  (define get-nums
+    (let iter ([nums (sort nums <)])
+      (let ([fs (first nums)]
+            [ls (last nums)])
+        (match (- (+ fs ls) target)
+          [0 (list fs ls)]
+          [(? negative?) (iter (rest nums))]
+          [(? positive?) (iter (drop-right nums 1))]))))
+  (if (apply eq? get-nums)
+      (indexes-of nums (first get-nums))
+      (map (λ (v) (index-of nums v)) get-nums)))
 
 (two-sum exls 9)
 (two-sum '(3 2 4) 6)
+(two-sum '(3 3) 6)
+
+;; idea
+;; get numbers that add up to target
+;; then use some kind of list-ref to get indices
