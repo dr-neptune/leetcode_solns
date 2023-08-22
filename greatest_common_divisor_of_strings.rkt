@@ -1,36 +1,23 @@
 #lang racket
 (require racket)
 
-;; idea
-;; iterate over both strings until they don't match
-(define (efirst ls)
-  (if (null? ls)
-      '()
-      (first ls)))
+(define (partition-n ls n)
+  (match (length ls)
+    [0 '()]
+    [(? (λ (v) (< v n))) (list ls)]
+    [_ (cons (take ls n)
+             (partition-n (drop ls n) n))]))
+
+(define (all-equal? ls [val (car ls)])
+  (andmap (λ (a) (equal? a val)) ls))
 
 (define (gcd-of-strings str1 str2)
-  (define rev-str (compose list->string reverse))
-  (let iter ([s1 (string->list str1)]
-             [s2 (string->list str2)]
-             [acc '()])
-    (displayln (format "~a ~a ~a" s1 s2 acc))
-    (match (list (efirst s1) (efirst s2))
-      [(list '() '()) (rev-str acc)]
-      [(list a a) (iter (rest s1) (rest s2) (cons a acc))]
-      [_ (rev-str acc)])))
-
-(gcd-of-strings "ABCABC" "ABC")
-(gcd-of-strings "ABABAB" "ABAB")
-
-
-(define (gcd-of-strings str1 str2)
-  (let ([s1 (string->list str1)]
-        [s2 (string->list str2)])
-    (let-values ([(common-prefix l r) (split-common-prefix s1 s2)])
-      (if (null? common-prefix)
-          ""
-          (list->string (argmax length (list l r)))))))
-
-;; need to rethink this approach
-
-(split-common-prefix (string->list "ABCDEF") (string->list "ABC"))
+  (let* ([divisor (apply gcd (map string-length (list str1 str2)))]
+         [sls1 (string->list str1)]
+         [sls2 (string->list str2)]
+         [ssub (take sls1 divisor)])
+    ;; check if strings are both made up of only that subset
+    (match (and (all-equal? (partition-n sls1 (length ssub)) ssub)
+                (all-equal? (partition-n sls2 (length ssub)) ssub))
+      [#t (list->string ssub)]
+      [_ ""])))
