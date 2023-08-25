@@ -83,6 +83,7 @@ result: "leotcede"
   (cons (if (vowel? s) v s) result))
 
 (define str "leetcode")
+(define chars (string->list str))
 (define vowels (list #\e #\e #\o #\e))
 
 (for/foldr ([result '()])
@@ -93,3 +94,51 @@ result: "leotcede"
 (reverse-vowels "leetcode")
 (reverse-vowels "hello")
 (reverse-vowels "b")
+
+
+(for/foldr ([acc '()])
+           ([]))
+
+
+(define (vowel? c)
+  (match c
+    [(or #\a #\e #\i #\o #\u
+         #\A #\E #\I #\O #\U) #t]
+    [_ #f]))
+
+(define (reverse-vowels* s)
+  (define chars (string->list s))
+  (for/foldr ([acc '()]
+              [vowels (for/list ([c chars] #:when (vowel? c)) c)]
+              #:result (list->string acc))
+             ([ch chars])
+    (if (vowel? ch)
+        (values (cons (first vowels) acc)
+                (rest vowels))
+        (values (cons ch acc)
+                vowels))))
+
+
+(for/foldr ([acc '()]
+            [vowels (for/list ([c chars] #:when (vowel? c)) c)]
+            #:result (list->string acc))
+           ([ch (in-list chars)])
+  (if (vowel? ch)
+      (values (cons (first vowels) acc)
+              (rest vowels))
+      (values (cons ch acc)
+              vowels)))
+
+;; why use in-list?
+;; why is vowels in the first section with the accumulator?
+
+(reverse-vowels* "axexixoxu")
+
+
+(for/foldr ([acc '()]
+            [v (for/list ([c chars] #:when (vowel? c)) c)]
+            #:result (list->string acc))
+           ([ch chars])
+  (if (vowel? ch)
+      (values (cons (first v) acc) (rest v))
+      (values (cons ch acc) v)))
