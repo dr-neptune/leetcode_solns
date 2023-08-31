@@ -193,6 +193,7 @@
          (list 0)
          (list 0 ..2)) 0]
     [(list 1 ...) (sub1 (length nums))]
+    [(list a b c) (sub1 (+ a b c))]
     [_ (apply max
               (map (λ (3-tup)
                      (+ (first 3-tup) (last 3-tup)))
@@ -203,3 +204,158 @@
                                       ((curry apply +) ls))) (partition-binary nums))) 3)))]))
 
 (longest-subarray '(0 1 0))
+
+
+;;
+
+(define (partition-binary ls)
+  (define (make-alternating-stream val1 val2)
+    (stream-cons val1 (make-alternating-stream val2 val1)))
+  (let loop ([fn? (make-alternating-stream zero? positive?)]
+             [acc '()]
+             [nums ls])
+    (if (null? nums)
+        (reverse (filter (compose not empty?) acc))
+        (loop (stream-rest fn?)
+              (cons (takef nums (stream-first fn?)) acc)
+              (dropf nums (stream-first fn?))))))
+
+(define (sliding-window ls n [vals '()])
+  (if (= n (length ls))
+      (reverse (cons ls vals))
+      (sliding-window (rest ls) n (cons (take ls n) vals))))
+
+(define (longest-subarray nums)
+  (match nums
+    [(or (list 1)
+         (list 0)
+         (list 0 ..2)) 0]
+    [(list 1 ...) (sub1 (length nums))]
+    [(list a b c) (sub1 (+ a b c))]
+    [_ (apply max
+       (map (λ (3-tup)
+              (+ (first 3-tup) (last 3-tup)))
+            (sliding-window
+             (flatten
+              (map (λ (ls) (if (zero? (first ls))
+                               ls
+                               ((curry apply +) ls))) (partition-binary nums))) 3)))]))
+
+(longest-subarray '(0 1 0))
+
+
+
+;; idea
+;; traverse the list
+;; have a count of 1s going
+;;
+
+(let loop ([nums exls3]
+           [max-count 0]
+           [zeros-left 1])
+  ())
+
+(partition-binary (flatten (remove '(0) (partition-binary exls3))))
+(partition-binary (flatten (remove '(0) (partition-binary exls2))))
+(partition-binary (flatten (remove '(0) (partition-binary exls))))
+
+;; Hi GPT!
+;; I have a list that has an arbitrary number of '(0) elements
+;; I want to return a list of lists in which a single '(0) element has been removed
+;; but a different one for each element
+;; for example: (1 '(0) 1 '(0) 1) -> ((1 1 '(0) 1) (1 '(0) 1 1))
+(define (partition-binary ls)
+  (define (make-alternating-stream val1 val2)
+    (stream-cons val1 (make-alternating-stream val2 val1)))
+  (let loop ([fn? (make-alternating-stream zero? positive?)]
+             [acc '()]
+             [nums ls])
+    (if (null? nums)
+        (reverse (filter (compose not empty?) acc))
+        (loop (stream-rest fn?)
+              (cons (takef nums (stream-first fn?)) acc)
+              (dropf nums (stream-first fn?))))))
+
+(define (combinations-minus-zero lst)
+  (map vector->list (vector->list
+                     (let ([vec (list->vector lst)])
+                      (for/vector ([i (vector-length vec)]
+                                   #:when (equal? (vector-ref vec i) '(0)))
+                        (for/vector ([j (vector-length vec)] #:when (not (= i j))) (vector-ref vec j)))))))
+
+(define (longest-subarray nums)
+  (match nums
+    [(or (list 1)
+         (list 0)
+         (list 0 ..2)) 0]
+    [(list 1 ...) (sub1 (length nums))]
+    [_ (apply max
+              (map (compose
+                    (curry apply max)
+                    (curry map (curry apply +))
+                    partition-binary
+                    flatten)
+                   (combinations-minus-zero (partition-binary nums))))]))
+
+
+(longest-subarray exls)
+(longest-subarray exls2)
+(longest-subarray '(1 1 1))
+(longest-subarray '(0 1 0))
+(longest-subarray exls3)
+(longest-subarray '(1 0 0 0 0))
+
+(partition-binary '(1 0 0 0 0))
+
+
+;; try again
+;; keep a running tally of 0s left
+
+;; inner loop
+;; while num 0s < 1
+;; add up number of 1s
+
+(define (get-run ls)
+  (for/fold ([current-streak 0]
+             [num-zeros 1]
+             #:result current-streak)
+            ([n ls]
+             #:break (negative? num-zeros))
+    ;; (displayln (format "~a ~a ~a" current-streak num-zeros n))
+    (match n
+      [1 (values (add1 current-streak) num-zeros)]
+      [0 (values current-streak (sub1 num-zeros))])))
+
+(get-run exls2)
+(get-run exls3)
+(get-run exls)
+
+;; outer loop
+;; start from i = 0
+;; move until i = n where n < longest-running
+
+
+(define (get-run ls)
+  (for/fold ([current-streak 0]
+             [num-zeros 1]
+             #:result current-streak)
+            ([n ls]
+             #:break (negative? num-zeros))
+    ;; (displayln (format "~a ~a ~a" current-streak num-zeros n))
+    (match n
+      [1 (values (add1 current-streak) num-zeros)]
+      [0 (values current-streak (sub1 num-zeros))])))
+
+(define (longest-subarray nums)
+  (match nums
+    [(list 1 ..1) (sub1 (length nums))]
+    [_ length(apply max
+         (for/list ([i (range (length nums))])
+           (let ([window (drop nums i)])
+             (get-run window))))]))
+
+(longest-subarray '(1 1 0 1))
+(longest-subarray '(0 1 1 1 0 1 1 0 1))
+(longest-subarray '(1 1 1))
+
+(longest-subarray '(1 1 1 1 1 0))
