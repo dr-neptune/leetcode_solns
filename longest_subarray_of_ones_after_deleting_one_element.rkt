@@ -359,3 +359,74 @@
 (longest-subarray '(1 1 1))
 
 (longest-subarray '(1 1 1 1 1 0))
+
+
+
+
+;; redo
+
+;; idea
+;; this is a sliding window problem
+;; essentially we need to traverse the list and count the max number of 1s in a row
+;; if we encounter a 0, we delete it and keep going
+;; if we encounter another 0, we reiterate from the start
+;; in this case, we have o(n^2)
+
+;; Maintain a sliding window where there is at most one zero on it.
+
+;; (0 1 1 1 0 1 1 0 1)
+;; idea
+;; get number of 0s
+;; start a sliding window across the entire list
+;; at start, move through the list until you hit a 0
+;; then start removing from the end until you hit a 0
+;; then start removing from the front until you hit another 0
+;; then the back, etc
+;; until there is only 1 0 left
+
+(let loop ([n exls2]
+           [num-zeros (- (length exls2) (apply + exls2))])
+  (cond [(zero? num-zeros) (apply + n)]
+        []))
+
+(takef-right exls2 (λ (v) a))
+
+
+;; maybe indexes-of can help
+;; get indexes of
+;; drop values from left and right until there is only 3 left
+;; use that to get the sum
+
+(define exls3 '(1 1 1))
+(define exls4 '(0 1 1 1 0 1 1))
+
+
+(let ([idxs (indexes-of exls4 0)]
+      [lslen (length exls4)])
+  (match idxs
+    [(or '() '(a)) (sub1 (length exls4))]
+    [(list a b) (max (- (sub1 lslen) (add1 a))
+                     (- b (add1 a)))]
+    [_ 'pass]))
+
+
+(let ([idxs (indexes-of exls2 0)]
+      [lslen (length exls2)])
+  (let loop ([idx idxs])
+    (displayln (format "~a" idx))
+    (match idx
+      [(or '() '(a)) (sub1 (length exls2))]
+      [(list a b) (max (- (sub1 lslen) (add1 a))
+                       (- b (add1 a)))]
+      [_ (apply max (map loop (map cons exls2 (rest exls2))))])))
+
+
+(require (only-in srfi/1 map))
+
+(map loop (map cons '(0 4 7 9 11) '(4 7 9 11)))
+
+(drop-right exls2 1)
+
+(indexes-of exls 0)
+(indexes-of exls4 0)
+(indexes-of exls2 0)
