@@ -125,18 +125,33 @@
     [(list #\R ..1 #\D ..1) (loop (remove #\D (rest senators)) #\R)]
     [(list #\D ..1 #\R ..1) (loop (remove #\R (rest senators)) #\D)]))
 
+(define (all-equal? ls)
+  (match ls
+    ['() #f]
+    [_ (let ([val (car ls)])
+         (andmap (λ (a) (equal? a val)) ls))]))
+
 (define (predict-party-victory senate)
+  (define (match-result result)
+    (match result
+      [#\D "Dire"]
+      [#\R "Radiant"]))
   (let loop ([senators (string->list senate)]
              [recent '()])
-    (match senators
-      ['() (match recent
-             [#\D "Dire"]
-             [#\R "Radiant"])]
-      [(list a) (match a
-                  [#\D "Dire"]
-                  [#\R "Radiant"])]
-      [(list #\R ..1 #\D ..1) (loop (remove #\D (rest senators)) #\R)]
-      [(list #\D ..1 #\R ..1) (loop (remove #\R (rest senators)) #\D)])))
+    (displayln (format "~a ~a" senators recent))
+    (if (all-equal? senators)
+        (match-result (first senators))
+        (match senators
+          ['() (match-result recent)]
+          [(list a) (match-result a)]
+          [(list #\R ..1 #\D ..1 _ ...) (loop (remove #\D (rest senators)) #\R)]
+          [(list #\D ..1 #\R ..1 _ ...) (loop (remove #\R (rest senators)) #\D)]))))
 
 ;; not working
 ;; try (R R R)
+
+(predict-party-victory "RRR")
+(predict-party-victory "RDR")
+(predict-party-victory "DDRRR")
+(predict-party-victory exstr)
+(predict-party-victory exstr2)
