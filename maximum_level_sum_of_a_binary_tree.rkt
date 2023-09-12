@@ -93,8 +93,8 @@
             [#f depth-maxes]
             [(tree-node a #f #f) depth-maxes]
             [_ (let ([max-info (list (layer-sum (make-next-layer-node-list tree)) depth)])
-                 (set-union (loop (tree-node-left tree) (cons max-info depth-maxes) (add1 depth))
-                            (loop (tree-node-right tree) (cons max-info depth-maxes) (add1 depth))))]))
+                 (append (loop (tree-node-left tree) (cons max-info depth-maxes) (add1 depth))
+                         (loop (tree-node-right tree) (cons max-info depth-maxes) (add1 depth))))]))
         #:key cadr <))
 
 
@@ -104,7 +104,7 @@
     (cadr (list-ref res (index-of (map car res) max-val)))))
 
 
-(max-level-sum extree)
+(max-level-sum extree3)
 
 ;; this is broken
 ;; with ; match: no matching clause for #f
@@ -117,3 +117,100 @@
                                                  (make-tree-node -32127)))))
 
 ;; not done!
+
+
+(define extree3
+  (tree-node 1
+             (tree-node 1 (make-tree-node 7) (make-tree-node -8))
+             (tree-node 0 (make-tree-node -7) (make-tree-node 9))))
+
+;; again
+
+;; maybe start with just creating a list of values at each level
+(define (make-next-layer-node-list root)
+  (match root
+    [(tree-node a #f #f) '()]
+    [#f '()]
+    [(or (tree-node a b #f)
+         (tree-node a #f b)) (list b)]
+    [(tree-node a b c) (list b c)]))
+
+(map tree-node-val (make-next-layer-node-list extree3))
+
+(apply + (append (map tree-node-val (make-next-layer-node-list (tree-node-left extree3)))
+                 (map tree-node-val (make-next-layer-node-list (tree-node-right extree3)))))
+
+(make-next-layer-node-list (make-next-layer-node-list extree3))
+
+
+;; so for a single node, we get 2 children
+;; then we need to iterate
+(flatten (map make-next-layer-node-list (make-next-layer-node-list extree3)))
+
+(empty? (flatten (map make-next-layer-node-list
+ (flatten (map make-next-layer-node-list (make-next-layer-node-list extree3))))))
+
+
+(define inter
+  (let loop ([depth 1]
+           [levels '()]
+           [next-level (list extree3)])
+  (if (empty? next-level)
+      (reverse levels)
+      (loop (add1 depth)
+            (cons (list (apply + (map tree-node-val next-level)) depth) levels)
+            (flatten (map make-next-layer-node-list next-level))))))
+
+(define (get-layer-sums tree)
+  (let loop ([depth 1]
+             [levels '()]
+             [next-level (list tree)])
+    (if (empty? next-level)
+        (reverse levels)
+        (loop (add1 depth)
+              (cons (list (apply + (map tree-node-val next-level)) depth) levels)
+              (flatten (map make-next-layer-node-list next-level))))))
+
+;; now we want to get the max that mins the depth
+
+(cadr (list-ref inter (apply min(indexes-of (map car inter) (apply max (map car inter))))))
+
+
+;; for a tree, return a list of all the children nodes
+(define (make-next-layer-node-list root)
+  (match root
+    [(tree-node a #f #f) '()]
+    [#f '()]
+    [(or (tree-node a b #f)
+         (tree-node a #f b)) (list b)]
+    [(tree-node a b c) (list b c)]))
+
+
+;; returns a list of values at each level and depths
+;; i.e. (((1 2 3 4 5) 0) ((6 7 8) 1) ((9 10 11) 2))
+(define (get-layer-values tree)
+  (let loop ([depth 1]
+             [levels '()]
+             [next-level (list tree)])
+    (if (empty? next-level)
+        (reverse levels)
+        (loop (add1 depth)
+              (cons (list (map tree-node-val next-level) depth) levels)
+              (flatten (map make-next-layer-node-list next-level))))))
+
+;; for a layer values list, apply proc to the values
+(define (fold-tree-val-layer tree [proc +])
+  (map (λ (ls) (list (apply proc (car ls)) (cdr ls)))
+       (get-layer-values tree)))
+
+(define (max-level-sum root)
+  (let* ([layer-sums-and-depths (fold-tree-val-layer root)]
+         [layer-sums (map car layer-sums-and-depths)])
+    (caadr
+     (list-ref layer-sums-and-depths
+               (apply min (indexes-of layer-sums
+                                      (apply max layer-sums)))))))
+
+(max-level-sum extree3)
+(max-level-sum extree)
+(max-level-sum extree2)
