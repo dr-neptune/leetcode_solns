@@ -74,6 +74,11 @@
                         (tree-node-left root)
                         (delete-node (tree-node-right root) key))]))))
 
+
+;; alternatively
+;; we need to find a way to bubble up the next highest
+
+
 ;; we need to build up the tree as we recurse down
 
 (delete-node extree 3)
@@ -151,3 +156,147 @@
 ;; get a traversal with min value first
 ;; use that min value as the root
 ;; build a bst off of that list with the min as the root node
+
+;; I think we would need to build a binary tree off of the min
+;; without moving the min to the front of the list in order to make this work
+
+(define (ls->binary-tree ls)
+  ;; idea
+  ;; take 3 values
+  ;;
+  ())
+
+(define (sorted-list->bst lst)
+  (if (null? lst)
+      #f
+      (let* ([middle (quotient (length lst) 2)]
+             [left (take lst middle)]
+             [right (drop lst (+ middle 1))])
+        (tree-node (list-ref lst middle)
+                   (sorted-list->bst left)
+                   (sorted-list->bst right)))))
+
+(sorted-list->bst (min->front (tree-node-right extree2) preorder-traversal))
+
+(let ([new-ls (min->front (tree-node-right extree2) preorder-traversal)])
+  )
+
+
+(define (list->btree lst)
+  (if (null? lst)
+      #f
+      (tree-node (car lst)
+                 (list->btree (take (cdr lst) (quotient (length (cdr lst)) 2)))
+                 (list->btree (drop (cdr lst) (quotient (length (cdr lst)) 2))))))
+
+(list->btree (min->front (tree-node-right extree2) preorder-traversal))
+
+(define (list->btree ls)
+  (if (null? ls)
+      #f
+      (tree-node (car ls)
+                 (list->btree (cdr ls))
+                 (list->btree (cddr ls)))))
+
+(list->btree (min->front (tree-node-right extree2) preorder-traversal))
+
+
+;;
+
+;; find then delete and append
+(define (delete-node-reorder root)
+  (match root
+    [#f '()]
+    [(tree-node a #f #f) #f]
+    [(or (tree-node a b #f)
+         (tree-node a #f b))
+     b]
+    [(tree-node a b c)
+     (displayln (format "~a ~a ~a" a b c))
+     (match b
+       [(tree-node d e f)
+        (displayln (format "\t\t~a ~a ~a" d e f))
+        ;; we need to loop through lefts, but let's start with just 1
+        (tree-node (tree-node-val e)
+                   (tree-node-left root)
+                   (tree-node d #f (tree-node-val f)))]
+       [(or (tree-node a b #f)
+            (tree-node a #f b)) b]
+       [(tree-node a #f #f) (tree-node a #f #f)]
+       [_ (tree-node (tree-node-val c)
+                     (tree-node-left root)
+                     (tree-node-right c))])]))
+
+(define (delete-node root key)
+  (if (not (tree-node? root))
+      #f
+      (let ([node-key (tree-node-val root)])
+        (match node-key
+          [(? (curry eq? key)) (delete-node-reorder root)]
+          [(? (curry < key)) (tree-node node-key
+                                        (delete-node (tree-node-left root) key)
+                                        (tree-node-right root))]
+          [_ (tree-node node-key
+                        (tree-node-left root)
+                        (delete-node (tree-node-right root) key))]))))
+
+
+;; alternatively
+;; we need to find a way to bubble up the next highest
+
+(delete-node extree2 50)
+
+(delete-node extree 3)
+
+(define (delete-node root key)
+  (if (not (tree-node? root))
+      #f
+      (match (tree-node-val root)
+        [(? (curry eq? key))
+         (match root
+           [(tree-node a #f #f) #f]
+           [(or (tree-node a #f b)
+                (tree-node a b #f))
+            b]
+           [_ (let loop ([rhs (tree-node-right root)])
+                (let ([rlhs (tree-node-left rhs)])
+                  (if (tree-node? rlhs)
+                      (loop rlhs)
+                      (tree-node (tree-node-val rhs)
+                                 (tree-node-left root)
+                                 (delete-node (tree-node-right root) (tree-node-val rhs))
+                                 ))))])]
+        [(? (curry < key)) (tree-node (tree-node-val root)
+                                      (delete-node (tree-node-left root) key)
+                                      (tree-node-right root))]
+        [_ (tree-node (tree-node-val root)
+                      (tree-node-left root)
+                      (delete-node (tree-node-right root) key))])))
+
+(delete-node extree 3)
+(delete-node extree2 50)
+
+
+(define (delete-node root key)
+  (if (not (tree-node? root))
+      #f
+      (match (tree-node-val root)
+        [(? (curry eq? key))
+         (match root
+           [(tree-node a #f #f) #f]
+           [(or (tree-node a #f b)
+                (tree-node a b #f))
+            b]
+           [_ (let loop ([rhs (tree-node-right root)])
+                (let ([rlhs (tree-node-left rhs)])
+                  (if (tree-node? rlhs)
+                      (loop rlhs)
+                      (tree-node (tree-node-val rhs)
+                                 (tree-node-left root)
+                                 (delete-node (tree-node-right root) (tree-node-val rhs))))))])]
+        [(? (curry < key)) (tree-node (tree-node-val root)
+                                      (delete-node (tree-node-left root) key)
+                                      (tree-node-right root))]
+        [_ (tree-node (tree-node-val root)
+                      (tree-node-left root)
+                      (delete-node (tree-node-right root) key))])))
