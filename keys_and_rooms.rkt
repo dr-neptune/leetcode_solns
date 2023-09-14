@@ -258,3 +258,131 @@ for each room
             (vector-set! seen key #t)
             #f)))
     seen))
+
+
+;; again!
+
+;; idea
+;; keep a constant time lookup data structure that has whether a room has been visited
+;; grab keys from 0th room
+;; for each key, grab keys from that room
+;; if a key has been seen, then change the ds
+;; otherwise go to the key room
+
+(let ([rooms exgraph2])
+  (let outer ([keys (first rooms)]
+              [seen-rooms (make-hash)])  ;; need to add 0th room
+    (let inner ([key keys])
+      (if (empty? keys)
+          #f
+          (if (hash-has-key? seen-rooms (first key))
+              (inner (rest keys))
+              (begin
+                (hash-update! seen-rooms (first key) add1 0)
+                (outer (list-ref rooms (first key)) seen-rooms)))))))
+
+
+(let ([rooms exgraph3]
+      [seen-rooms (make-hash '((0 1)))])
+  (define (dfs room)
+    (let loop ([keys room])
+      (if (empty? keys)
+          '()
+          (if (hash-has-key? seen-rooms (first keys))
+              '()
+              (begin
+                (hash-update! seen-rooms (first keys) add1 0)
+                (dfs (list-ref rooms (first keys))))))))
+  (dfs (first rooms))
+  (eq? (length (hash-keys seen-rooms))
+       (length rooms)))
+
+(define (can-visit-all-rooms rooms)
+  (let ([seen-rooms (make-hash '((0 1)))])
+    (define (dfs room)
+      (let loop ([keys room])
+        (if (empty? keys)
+            '()
+            (if (hash-has-key? seen-rooms (first keys))
+                (loop (rest keys))
+                (begin
+                  (hash-update! seen-rooms (first keys) add1 0)
+                  (dfs (list-ref rooms (first keys))))))))
+    (dfs (first rooms))
+    (eq? (length (hash-keys seen-rooms))
+         (length rooms))))
+
+
+;; almost! 55/68
+(define exgraph4 '((1 3 2) (2 3) (2 3 1) ()))
+
+(let ([rooms exgraph5]
+      [seen-rooms (make-hash '((0 1)))])
+  (define (dfs room)
+    (let loop ([keys room])
+      (displayln (format "seen: ~a keys: ~a" seen-rooms keys))
+      (if (empty? keys)
+          seen-rooms
+          (if (hash-has-key? seen-rooms (first keys))
+              (loop (rest keys))
+              (begin
+                (hash-update! seen-rooms (first keys) add1 0)
+                (displayln (format "going to room: ~a" (first keys)))
+                (dfs (list-ref rooms (first keys))))))))
+  (dfs (first rooms))
+  (eq? (length (hash-keys seen-rooms))
+       (length rooms)))
+
+;; idea
+;; for each key, just update seen-rooms
+(define exgraph5 '((2 3) () (2) (1 3)))
+
+
+(let ([rooms exgraph5]
+      [seen-rooms (make-hash '((0 1)))])
+  (define (dfs room)
+    ;; (displayln (format "seen: ~a room: ~a" seen-rooms room))
+    (map (λ (key)
+           (if (hash-has-key? seen-rooms key)
+               #f
+               (begin
+                 (hash-update! seen-rooms key add1 0)
+                 (identity ;;begin
+                   ;;(displayln (format "going to room ~a" key))
+                  (dfs (list-ref rooms key))))))
+         room))
+  (begin
+    (dfs (first rooms))
+    (equal? (length (hash-keys seen-rooms))
+            (length rooms))))
+
+(define (can-visit-all-rooms rooms)
+  (let ([seen-rooms (make-hash '((0 1)))])
+    (define (dfs room)
+      (map (λ (key)
+             (if (hash-has-key? seen-rooms key)
+                 #f
+                 (begin
+                   (hash-update! seen-rooms key add1 0)
+                   (dfs (list-ref rooms key)))))
+           room))
+    (begin
+      (dfs (first rooms))
+      (equal? (length (hash-keys seen-rooms))
+              (length rooms)))))
+
+
+(define (can-visit-all-rooms rooms)
+  (let ([seen-rooms (make-hash '((0 1)))])
+    (define (dfs room)
+      (map (λ (key)
+             (if (hash-has-key? seen-rooms key)
+                 #f
+                 (begin
+                   (hash-update! seen-rooms key add1 0)
+                   (dfs (list-ref rooms key)))))
+           room))
+    (begin
+      (dfs (first rooms))
+      (= (hash-count seen-rooms)
+         (length rooms)))))
