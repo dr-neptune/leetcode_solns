@@ -104,3 +104,153 @@
     (for/list ([key keys])
       (displayln (format "inner: ~a" key))
       (values (list-ref rooms key)))))
+
+;; okididdlyokily
+
+;; idea
+;; visit each room
+;; when you get new keys, add them to a set
+;; for each key that is not in the set already, view the room and add it to the set
+(let* ([rooms exgraph2]
+       [num-rooms (length rooms)])
+  (let dfs ([room (first rooms)]
+            [seen-keys (list->set (cons 0 (first rooms)))])
+    (for/set ([key room])
+      (if (not (set-member? seen-keys key))
+          key
+          (set-union (list->set (list-ref rooms key)) seen-keys)))))
+
+(let* ([rooms exgraph2]
+       [num-rooms (length rooms)]
+       [room (first rooms)]
+       [seen-keys (list->set (cons 0 (first rooms)))])
+  (for/set ([key room])
+      (if (not (set-member? seen-keys key))
+          key
+          (set-union (list->set (list-ref rooms key)) seen-keys))))
+
+;; now we need to see if we have all the rooms
+(define (can-visit-all-rooms rooms)
+  (let* ([num-rooms (length rooms)]
+         [room (first rooms)]
+         [seen-keys (list->set (first rooms))])
+    (identity ;eq? num-rooms
+         (identity ;(compose set-count set-first)
+          (for/set ([key room])
+            (displayln (format "~a ~a" key seen-keys))
+            (if (not (set-member? seen-keys key))
+                key
+                (set-union (list->set (list-ref rooms key)) seen-keys)))))))
+
+(can-visit-all-rooms exgraph2)
+(can-visit-all-rooms exgraph)
+
+(define exgraph3 '((1) (2) () (3)))
+
+;; how 2 br00t force?
+;; start with first room
+;; then add keys
+(define rooms exgraph2)
+
+(let ([rooms exgraph])
+  (let loop ([room-key (first rooms)]
+             [held-keys (list->set (first rooms))])
+    (if (null? room-key)
+        held-keys
+        (loop (rest room-key)
+              (set-union (list->set (list-ref rooms (first room-key))) held-keys)))))
+
+;; we need to recurse!
+
+;; grab the keys from the first room
+;; for each key in the first room
+;;   unlock the door of the room for the key and recurse with those keys
+;;     but filter out keys that are already seen
+;;   if a room is empty after filtering then return the list of rooms seen
+
+(let ([rooms exgraph2])
+  (let ([room (first rooms)])
+    (let loop ([keys (first rooms)])
+      (displayln (format "keys: ~a" keys))
+      (if (empty? keys)
+          '()
+          (cons (first keys)
+                (for/list ([key keys])
+                  (let ([new-room (filter (λ (v) (not (member v keys)))
+                                          (list-ref rooms key))])
+                    (loop new-room))))))))
+
+
+(define (dfs rooms idx rooms-visited)
+  (map (λ (j)
+         (if (not (vector-ref rooms-visited j))
+             (begin
+               (vector-set! rooms-visited j #t)
+               (dfs rooms j rooms-visited))
+             #f))
+       (list-ref rooms idx)))
+
+(define (can-visit-all-rooms rooms)
+  (let ([rooms-visited (make-vector (length rooms) #f)])
+    (vector-set! rooms-visited 0 #t)
+    (dfs rooms 0 rooms-visited)
+    (andmap identity (vector->list rooms-visited))))
+
+(can-visit-all-rooms exgraph)
+(can-visit-all-rooms exgraph2)
+
+(define (dfs rooms visited)
+  (map (λ (rm)
+         (map (λ (key)
+                (if (member key visited)
+                    #f
+                    (dfs (list-ref rooms key) (cons key visited))))
+              (list rm)))
+       rooms))
+
+(dfs exgraph2 '())
+
+
+;; inner
+;; for a given list of keys
+;; if we have seen it, then pass
+;; if we haven't seen it, then inner it
+
+;; outer
+;; for each of them, do inner
+
+
+#|
+
+for each room
+    for each key in room
+        if room has been seen, make a tally and then recurse
+ else return '()
+
+|#
+
+(let ([rooms exgraph2]
+      [seen-keys '()])
+  (for/list ([room rooms])
+    (let loop ([key room])
+      (if (empty? key)
+          '()
+          (cons (vector-member))))))
+
+(let ([rooms exgraph2])
+  (let loop ([room (list->vector rooms)]
+             [seen-rooms (vector-append #(#t) (make-vector #f (length rooms)))])
+    (if (vector-ref seen-rooms)
+        #()
+        (begin
+          (vector-set! seen-rooms )))))
+
+(let ([rooms exgraph2])
+  (let ([seen (vector-append #(#t) (make-vector (sub1 (length rooms)) #f))])
+    (for/vector ([room rooms])
+      (let loop ([]))
+      (for/vector ([key room])
+        (if (not (vector-ref seen key))
+            (vector-set! seen key #t)
+            #f)))
+    seen))
