@@ -37,18 +37,19 @@
                     (vector-set! seen i 1)
                     (loop (list-ref nodes i) (add1 i)))]))))
 
-
-(define (can-visit-all-rooms rooms)
-  (let ([seen-rooms (make-hash '((0 1)))])
-    (define (dfs room)
-      (map (λ (key)
-             (if (hash-has-key? seen-rooms key)
-                 #f
-                 (begin
-                   (hash-update! seen-rooms key add1 0)
-                   (dfs (list-ref rooms key)))))
-           room))
-    (begin
-      (dfs (first rooms))
-      (= (hash-count seen-rooms)
-         (length rooms)))))
+(let* ([nodes exgraph]
+       [seen (make-vector (length (first nodes)) 0)])
+  (let loop ([fnode (third nodes)])
+    (displayln fnode)
+    (for/list ([val fnode]
+               [i (in-range (length fnode))])
+      ;; check if seen
+      (match val
+        [1 (if (zero? (vector-ref seen i))
+          (begin
+            (vector-set! seen i 1)
+            (loop (list-ref nodes i)))
+          #f)]
+        [_ #f])
+      ))
+  seen)
