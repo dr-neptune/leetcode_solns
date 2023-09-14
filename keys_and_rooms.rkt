@@ -190,6 +190,8 @@
              #f))
        (list-ref rooms idx)))
 
+
+
 (define (can-visit-all-rooms rooms)
   (let ([rooms-visited (make-vector (length rooms) #f)])
     (vector-set! rooms-visited 0 #t)
@@ -205,7 +207,9 @@
                 (if (member key visited)
                     #f
                     (dfs (list-ref rooms key) (cons key visited))))
-              (list rm)))
+              (if (list? rm)
+                  rm
+                  (list rm))))
        rooms))
 
 (dfs exgraph2 '())
