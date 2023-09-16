@@ -53,3 +53,100 @@
         [_ #f])
       ))
   seen)
+
+
+;; note
+;; since this is 0 and 1, we can find nodes that haven't been
+;; visited between iterations by grabbing the first 0 with
+;; some find function that returns the index
+
+
+;; woohoo, this works!
+(define (find-circle-num isConnected)
+  (let* ([nodes isConnected])
+    (define (dfs node)
+      (let ([seen (make-vector (length node) 0)])
+        (let loop ([fnode node])
+          ;; (displayln fnode)
+          (for/list ([val fnode]
+                     [i (in-range (length fnode))])
+            ;; check if seen
+            (match val
+              [1 (if (zero? (vector-ref seen i))
+                     (begin
+                       (vector-set! seen i 1)
+                       (loop (list-ref nodes i)))
+                     #f)]
+              [_ #f])
+            ))
+        seen))
+    (set-count (apply set (map dfs nodes)))))
+
+
+(find-circle-num exgraph)
+
+;; dumb
+;; just go over each node, append new values to a set
+
+
+
+;; better
+;; keep a tally of which nodes have occurred in our sets
+;; then only look at nodes that have not occurred yet
+
+
+(define (find-circle-num isConnected)
+  (let* ([nodes isConnected])
+    (define (dfs node)
+      (let ([seen (make-vector (length node) 0)])
+        (let loop ([fnode node])
+          (for/list ([val fnode]
+                     [i (in-range (length fnode))])
+            ;; check if seen
+            (match val
+              [1 (if (zero? (vector-ref seen i))
+                     (begin
+                       (vector-set! seen i 1)
+                       (loop (list-ref nodes i)))
+                     #f)]
+              [_ #f])
+            ))
+        seen))
+    (set-count (apply set (map dfs nodes)))))
+
+
+(define (find-circle-num isConnected)
+  (define (dfs node)
+    (define seen (make-vector (length node) 0))
+    (let loop ([fnode node])
+      (for/list ([val fnode]
+                 [i (in-range (length fnode))])
+        (match val
+          [1 (if (zero? (vector-ref seen i))
+                 (begin
+                   (vector-set! seen i 1)
+                   (loop (list-ref isConnected i)))
+                 #f)]
+          [_ #f]))
+        seen))
+    (set-count (apply set (map dfs isConnected))))
+
+
+(define (find-circle-num isConnected)
+  (let* ([nodes isConnected])
+    (define (dfs node)
+      (let ([seen (make-vector (length node) 0)])
+        (let loop ([fnode node])
+          (for/list ([val fnode]
+                     [i (in-range (length fnode))])
+            ;; check if seen
+            (match val
+              [1 (if (zero? (vector-ref seen i))
+                     (begin
+                       (vector-set! seen i 1)
+                       (loop (list-ref nodes i)))
+                     #f)]
+              [_ #f])
+            ))
+        seen))
+    (set-count (apply set (map dfs nodes)))))
