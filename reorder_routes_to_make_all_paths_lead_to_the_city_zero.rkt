@@ -242,3 +242,124 @@
         )))
 
 ;; ah wah ah ah ah
+
+;; try again
+;; idea
+;; for each node
+;; see if we can get to 0
+;; if we hit a point where we cannot reach 0
+;; then swap the pointer
+;; then restart
+
+(let ([connections exgraph]
+      [n 6]
+      [num-flips 0])
+  ;; start by just starting at a node and getting to 0
+  (define (get-node-graph index)
+    (filter (λ (pair) (equal? (first pair) index))
+            connections))
+  (define (reverse-node! index)
+    (set! connections (list-set connections index (reverse (list-ref connections index)))))
+  ;; (get-node-graph 4))
+  ;; since we will be restarting, if nothing shows up we can just ignore it
+  (for/list ([i (in-range n)])
+    (let loop ([node-start (get-node-graph i)])
+      ;; need to handle each node in node-start
+      (for/list ([node node-start])
+        (displayln (format "working on: ~a" node))
+        (match node
+          ['() (begin
+                 (reverse-node! i)
+                 (set! num-flip (add1 num-flips)))]
+          [(list a 0) (begin
+                        (displayln "reached 0!")
+                        num-flips)]
+          [_ (loop (get-node-graph (second node)))])))))
+
+;; this is all kind of a mess
+;; make a dfs function
+(define (get-node-graph index [connections exgraph])
+    (filter (λ (pair) (equal? (first pair) index))
+            connections))
+
+(define (dfs node [prev '()])
+  (displayln node)
+  (match node
+    ['() (begin
+           (displayln (format "null found! reversing ~a: ~a" prev (reverse prev)))
+           (reverse prev))]
+    [(list a 0) (begin
+                  (displayln "reached 0!")
+                  0)]
+    [_ (begin
+         (displayln (format "map called with ~a" (get-node-graph (second node))))
+         (map (λ (node-graph) (dfs node-graph node)) (get-node-graph (second node))))]))
+
+;; now if we hit a null node, then flip the given node
+
+
+(for/list ([node exgraph]
+           [i (in-range (length exgraph))])
+  (displayln (format "called ~a times" i))
+  (dfs node))
+
+;; try again with backtracking
+(define (get-node-graph index [rev #f] [connections exgraph])
+  (let ([fn (match rev
+              [#f first]
+              [_ second])])
+    (filter (λ (pair) (equal? (fn pair) index))
+            connections)))
+
+(define (dfs node)
+  (displayln node)
+  (match node
+    ['() '()]
+    [(list a 0) (begin
+                  (displayln "reached 0!")
+                  0)]
+    [_ (let ([next-node (get-node-graph (second node))])
+         (match next-node
+           ['() (begin
+                  (displayln
+                   (format "backtracking away from null node ~a -> ~a" next-node (get-node-graph (second node) #t)))
+                  (map dfs (get-node-graph (second node) #t)))]
+           [_ (map dfs next-node)]))]))
+
+(for/list ([node exgraph]
+           [i (in-range (length exgraph))])
+  (displayln (format "called ~a times" i))
+  (dfs node))
+
+;; how do I turn a directed graph
+;; into an undirected graph?
+
+;; idea
+;; take initial graph
+;; append it with a reversed graph
+;; then try to traverse to an exit
+(define (get-node-graph index [prev '()] [connections exgraph])
+  (filter (λ (pair) (and (equal? (first pair) index)
+                         (not (equal? (second pair) prev))))
+          connections))
+
+(let* ([connections exgraph]
+       [augmented (append (map (λ (pair) (append pair '(1))) connections)
+                          (map (λ (pair) (append (reverse pair) '(0))) connections))])
+  (define (dfs node [prev '()])
+    ;; need to keep track of prev to always move forward
+    (displayln (format "node: ~a" node))
+    (let ([next-node (flatten (get-node-graph (second node) (first node) augmented))])
+      (displayln (format "next-node: ~a" next-node))
+      (match next-node
+        ['() 0]
+        [_ (+ (last node)
+              (map dfs (get-node-graph (second node) (first node) augmented)))])))
+  (map dfs (get-node-graph 0 '() augmented)))
+
+
+;; idea
+;; append a 0 to originals
+;; and a 1 to augments
+;; then sum
+;; I think the implementation above is almost there
