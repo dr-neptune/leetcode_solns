@@ -92,7 +92,7 @@
              [num-changes 0])
     ;; get indexes
     (let ([f-idx (index-of paths #f)])
-      (displayln (format "~a ~a" paths f-idx))
+      ;; (displayln (format "~a ~a" paths f-idx))
       (match f-idx
         [#f num-changes]
         [_ (loop (map can-reach-0 (list-update connections f-idx reverse))
@@ -345,17 +345,34 @@
 
 (let* ([connections exgraph]
        [augmented (append (map (λ (pair) (append pair '(1))) connections)
-                          (map (λ (pair) (append (reverse pair) '(0))) connections))])
+                          (map (λ (pair) (append (reverse pair) '(0))) connections))]
+       [build-up '()])
   (define (dfs node [prev '()])
     ;; need to keep track of prev to always move forward
     (displayln (format "node: ~a" node))
+    (when (not (zero? (last node)))
+      (set! build-up (cons (last node) build-up)))
     (let ([next-node (flatten (get-node-graph (second node) (first node) augmented))])
       (displayln (format "next-node: ~a" next-node))
       (match next-node
-        ['() 0]
-        [_ (+ (last node)
-              (map dfs (get-node-graph (second node) (first node) augmented)))])))
-  (map dfs (get-node-graph 0 '() augmented)))
+        ['() '()] ;; (begin
+               ;; (set! build-up (cons (last node) build-up))
+         ;; (println (format "finished: ~a" build-up))
+         ;]
+        [_ (begin
+             ;; (set! build-up (cons (last node) build-up))
+             (displayln (format "current: ~a" build-up))
+             (map dfs (get-node-graph (second node) (first node) augmented)))]
+        ;; [_ (cons (last node)
+        ;;       (map dfs (get-node-graph (second node) (first node) augmented)))]
+        )))
+  (for ([node (get-node-graph 0 '() augmented)])
+    (dfs node))
+  build-up
+  ;; (map dfs (get-node-graph 0 '() augmented))
+  )
+
+
 
 
 ;; idea
@@ -363,3 +380,390 @@
 ;; and a 1 to augments
 ;; then sum
 ;; I think the implementation above is almost there
+
+
+(let* ([connections exgraph]
+       [augmented (append (map (λ (pair) (append pair '(1))) connections)
+                          (map (λ (pair) (append (reverse pair) '(0))) connections))]
+       [build-up '()])
+  (define (dfs node [prev '()])
+    ;; need to keep track of prev to always move forward
+    (when (not (zero? (last node)))
+      (set! build-up (cons (last node) build-up)))
+    (let ([next-node (flatten (get-node-graph (second node) (first node) augmented))])
+      (match next-node
+        ['() '()]
+        [_ (for ([node (get-node-graph (second node) (first node) augmented)])
+             (dfs node))])))
+  (for ([node (get-node-graph 0 '() augmented)])
+    (dfs node))
+  build-up)
+
+
+(define (min-reorder n connections)
+  (let* ([augmented (append (map (λ (pair) (append pair '(1))) connections)
+                            (map (λ (pair) (append (reverse pair) '(0))) connections))]
+         [build-up '()])
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (and (equal? (first pair) index)
+                             (not (equal? (second pair) prev))))
+              augmented))
+    (define (dfs node [prev '()])
+      ;; need to keep track of prev to always move forward
+      (when (not (zero? (last node)))
+        (set! build-up (cons (last node) build-up)))
+      (let ([next-node (flatten (get-node-graph (second node) (first node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (second node) (first node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0 '())])
+      (dfs node))
+    (apply + build-up)))
+
+(min-reorder 6 exgraph)
+(min-reorder 5 exgraph2)
+
+
+;; make it faster!
+;; idea
+;; use binary search to find nodes on the sorted second vals
+;; also use cond and add up the first values
+(define (node-binary-search graph)
+  )
+
+(define (min-reorder n connections)
+  (let* ([augmented (append (map (λ (pair) (cons 1 pair)) connections)
+                            (map (λ (pair) (cons 0 pair)) connections))]
+         [build-up 0])
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (and (equal? (second pair) index)
+                             (not (equal? (third pair) prev))))
+              augmented))
+    (define (dfs node [prev '()])
+      ;; need to keep track of prev to always move forward
+      (when (not (zero? (first node)))
+        (set! build-up (add1 build-up)))
+      (let ([next-node (flatten (get-node-graph (third node) (second node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (third node) (second node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0 '())])
+      (dfs node))
+    build-up
+    ;; (apply + build-up)
+    ))
+
+
+
+(define (min-reorder n connections)
+  (let* ([augmented (append (map (λ (pair) (cons 1 pair)) connections)
+                            (map (λ (pair) (cons 0 (reverse pair))) connections))]
+         [build-up '()])
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (and (equal? (second pair) index)
+                             (not (equal? (third pair) prev))))
+              augmented))
+    (define (dfs node [prev '()])
+      (displayln (format "node: ~a build: ~a" node build-up))
+      ;; need to keep track of prev to always move forward
+      (when (not (zero? (first node)))
+        (set! build-up (cons 1 build-up)))
+      (let ([next-node (flatten (get-node-graph (third node) (second node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (third node) (second node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0)])
+      (dfs node))
+    (apply + build-up)))
+
+
+
+
+
+(define (min-reorder n connections)
+  (let* ([augmented (sort (append (map (λ (pair) (cons 1 pair)) connections)
+                                  (map (λ (pair) (cons 0 (reverse pair))) connections))
+                          #:key cadr <)]
+         [build-up '()])
+    ;; augmented)
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (and (equal? (second pair) index)
+                             (not (equal? (third pair) prev))))
+              augmented))
+    (define (dfs node [prev '()])
+      (displayln (format "node: ~a build: ~a" node build-up))
+      ;; need to keep track of prev to always move forward
+      (when (not (zero? (first node)))
+        (set! build-up (cons 1 build-up)))
+      (let ([next-node (flatten (get-node-graph (third node) (second node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (third node) (second node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0)])
+      (dfs node))
+    (apply + build-up)))
+
+
+(min-reorder 6 exgraph)
+(min-reorder 5 exgraph2)
+
+
+
+(define exgraph3 '((0 0 1) (1 1 0) (1 1 2) (0 2 1) (0 2 3) (1 3 2) (1 3 4) (0 4 3)))
+
+;; need to find a hit
+;; then traverse left and right appending while they are the same
+;; needs to handle first and last as well
+(define (check-vals idx graph direction goal)
+  (match (list idx direction)
+    [(or (list 0 'left)
+         (list (== (sub1 (vector-length graph))) 'right)) '()]
+    [_ (let ([get-next-node (λ (idx)
+                                 (let ([node (vector-ref graph idx)])
+                                   (if (equal? (cadr node) goal)
+                                     (cons node (check-vals idx graph direction goal))
+                                     '())))])
+            (match direction
+              ['left (get-next-node (sub1 idx))]
+              ['right (get-next-node (add1 idx))]))]))
+
+
+(check-vals 0 (list->vector exgraph3) 'right 0)
+(check-vals 0 (list->vector exgraph3) 'right 1)
+(check-vals 0 (list->vector exgraph3) 'left 1)
+(check-vals 1 (list->vector exgraph3) 'right 1)
+(check-vals 1 (list->vector exgraph3) 'left 1)
+
+(check-vals (length exgraph3) (list->vector exgraph3) 'right 4)
+
+
+
+(check-vals 3)
+
+(define (graph-binary-search goal graph [idx (quotient (vector-length graph) 2)])
+  (displayln (format "goal: ~a graph: ~a idx: ~a" goal graph idx))
+  (let loop ([idx idx])
+    (let ([node (vector-ref graph idx)])
+      (match (cadr node)
+        [(? (curry equal? goal))
+         node
+         (append
+          (check-vals idx graph 'left goal)
+          (check-vals idx graph 'right goal)
+          (list node))]
+      [(? (curry < goal)) (loop (quotient idx 2))]
+      [(? (curry > goal)) (loop (- (sub1 (vector-length graph))
+                                   (quotient idx 2)))]))))
+
+;; suppose our list is length 8
+;; we start out by halving and checking idx 4
+;; if our goal is higher than index 4, we need to
+;; increase our index by (/ idx 2)
+;; else we need to reduce our index by
+;; (/ idx 2)
+
+(define (vector-search nums target)
+  (define (ptr-narrow left right)
+    (let* ([pivot (quotient (+ left right) 2)]
+           [pivot-val (vector-ref nums pivot)])
+      (cond [(> left right) -1]
+            [(= pivot-val target) pivot]
+            [(< target pivot-val) (ptr-narrow left (sub1 pivot))]
+            [else (ptr-narrow (add1 pivot) right)])))
+  (ptr-narrow 0 (sub1 (vector-length nums))))
+
+(define (check-vals idx graph direction goal)
+  (match (list idx direction)
+    [(or (list 0 'left)
+         (list (== (sub1 (vector-length graph))) 'right)) '()]
+    [_ (let ([get-next-node (λ (idx)
+                                 (let ([node (vector-ref graph idx)])
+                                   (if (equal? (cadr node) goal)
+                                     (cons node (check-vals idx graph direction goal))
+                                     '())))])
+            (match direction
+              ['left (get-next-node (sub1 idx))]
+              ['right (get-next-node (add1 idx))]))]))
+
+
+
+(let* ([graph (list->vector exgraph3)]
+       [goal 4]
+       [found-val (vector-search (vector-map cadr graph) goal)])
+  (append
+   (list (vector-ref graph found-val))
+   (check-vals found-val graph 'right goal)
+   (check-vals found-val graph 'left goal)))
+
+(define (graph-binary-search goal graph)
+  (let* ([found-val (vector-search (vector-map cadr graph) goal)])
+    (append
+     (list (vector-ref graph found-val))
+     (check-vals found-val graph 'right goal)
+     (check-vals found-val graph 'left goal))))
+
+(check-vals (search (map cadr exgraph3) 4))
+;; search graph
+;; find a winner
+;; then check surrounding areas
+
+
+(list-ref exgraph3 (- (sub1 (length exgraph3))
+                      (- (sub1 (length exgraph3))
+                      (- (sub1 (length exgraph3))
+                         (- (sub1 (length exgraph3))
+                            (quotient (length exgraph3) 2))))))
+
+;; currently fails at the right-most index
+(graph-binary-search 4 (vector-sort (list->vector exgraph3) #:key cadr <))
+(graph-binary-search 3 (vector-sort (list->vector exgraph3) #:key cadr <))
+(graph-binary-search 0 (vector-sort (list->vector exgraph3) #:key cadr <))
+(graph-binary-search 1 (vector-sort (list->vector exgraph3) #:key cadr <))
+(graph-binary-search 0 (vector-sort (list->vector exgraph) #:key cadr <))
+
+(check-vals idx graph direction goal)
+(check-vals 0 (list->vector exgraph3) 'right 0)
+(check-vals 0 (list->vector exgraph3) 'right 1)
+(check-vals 1 (list->vector exgraph3) 'right 1)
+(check-vals 1 (list->vector exgraph3) 'left 1)
+
+(check-vals 7 (vector-sort (list->vector exgraph3) #:key cadr <) 'left 3)
+(check-vals 4 (vector-sort (list->vector exgraph3) #:key cadr <) 'right 3)
+
+(define (min-reorder n connections)
+  (let* ([augmented (list->vector
+                     (sort (append (map (λ (pair) (cons 1 pair)) connections)
+                                   (map (λ (pair) (cons 0 (reverse pair))) connections))
+                           #:key cadr <))]
+         [build-up '()])
+    ;; (graph-binary-search 0 augmented)))
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (not (equal? (third pair) prev)))
+              (graph-binary-search index augmented)))
+    (define (dfs node [prev '()])
+      (when (not (zero? (first node)))
+        (set! build-up (cons 1 build-up)))
+      (let ([next-node (flatten (get-node-graph (third node) (second node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (third node) (second node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0)])
+      (dfs node))
+    (apply + build-up)))
+
+(min-reorder 6 exgraph)
+(min-reorder 5 exgraph2)
+
+
+;; again!
+(define (vector-search nums target)
+  (define (ptr-narrow left right)
+    (let* ([pivot (quotient (+ left right) 2)]
+           [pivot-val (vector-ref nums pivot)])
+      (cond [(> left right) -1]
+            [(= pivot-val target) pivot]
+            [(< target pivot-val) (ptr-narrow left (sub1 pivot))]
+            [else (ptr-narrow (add1 pivot) right)])))
+  (ptr-narrow 0 (sub1 (vector-length nums))))
+
+(define (check-vals idx graph direction goal)
+  (match (list idx direction)
+    [(or (list 0 'left)
+         (list (== (sub1 (vector-length graph))) 'right)) '()]
+    [_ (let ([get-next-node (λ (idx)
+                                 (let ([node (vector-ref graph idx)])
+                                   (if (equal? (cadr node) goal)
+                                     (cons node (check-vals idx graph direction goal))
+                                     '())))])
+            (match direction
+              ['left (get-next-node (sub1 idx))]
+              ['right (get-next-node (add1 idx))]))]))
+
+(define (graph-binary-search goal graph)
+  (let* ([found-val (vector-search (vector-map cadr graph) goal)])
+    (append
+     (list (vector-ref graph found-val))
+     (check-vals found-val graph 'right goal)
+     (check-vals found-val graph 'left goal))))
+
+(define (min-reorder n connections)
+  (let* ([augmented (list->vector
+                     (sort (append (map (λ (pair) (cons 1 pair)) connections)
+                                   (map (λ (pair) (cons 0 (reverse pair))) connections))
+                           #:key cadr <))]
+         [build-up '()])
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (not (equal? (third pair) prev)))
+              (graph-binary-search index augmented)))
+    (define (dfs node [prev '()])
+      (when (not (zero? (first node)))
+        (set! build-up (cons 1 build-up)))
+      (let ([next-node (flatten (get-node-graph (third node) (second node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (third node) (second node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0)])
+      (dfs node))
+    (apply + build-up)))
+
+
+;; too slow :(
+(define (vector-search nums target)
+  (define (ptr-narrow left right)
+    (let* ([pivot (quotient (+ left right) 2)]
+           [pivot-val (vector-ref nums pivot)])
+      (cond [(> left right) -1]
+            [(= pivot-val target) pivot]
+            [(< target pivot-val) (ptr-narrow left (sub1 pivot))]
+            [else (ptr-narrow (add1 pivot) right)])))
+  (ptr-narrow 0 (sub1 (vector-length nums))))
+
+(define (check-vals idx graph direction goal)
+  (match (list idx direction)
+    [(or (list 0 'left)
+         (list (== (sub1 (vector-length graph))) 'right)) '()]
+    [_ (let ([get-next-node (λ (idx)
+                                 (let ([node (vector-ref graph idx)])
+                                   (if (equal? (cadr node) goal)
+                                     (cons node (check-vals idx graph direction goal))
+                                     '())))])
+            (match direction
+              ['left (get-next-node (sub1 idx))]
+              ['right (get-next-node (add1 idx))]))]))
+
+(define (graph-binary-search goal graph)
+  (let* ([found-val (vector-search (vector-map cadr graph) goal)])
+    (append
+     (list (vector-ref graph found-val))
+     (check-vals found-val graph 'right goal)
+     (check-vals found-val graph 'left goal))))
+
+(define (min-reorder n connections)
+  (let* ([augmented (list->vector
+                     (sort (append (map (λ (pair) (cons 1 pair)) connections)
+                                   (map (λ (pair) (cons 0 (reverse pair))) connections))
+                           #:key cadr <))]
+         [build-up 0])
+    (define (get-node-graph index [prev '()])
+      (filter (λ (pair) (not (equal? (third pair) prev)))
+              (graph-binary-search index augmented)))
+    (define (dfs node [prev '()])
+      (when (not (zero? (first node)))
+        (set! build-up (add1 build-up)))
+      (let ([next-node (flatten (get-node-graph (third node) (second node)))])
+        (match next-node
+          ['() '()]
+          [_ (for ([node (get-node-graph (third node) (second node))])
+               (dfs node))])))
+    (for ([node (get-node-graph 0)])
+      (dfs node))
+    build-up))
+
+
+;; ~.~
