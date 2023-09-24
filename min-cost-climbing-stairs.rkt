@@ -70,3 +70,174 @@
 
 ;; this is a greedy approach
 ;; but it is not globally optimal
+
+;; idea
+;; at each step, we should split depending on whether we take 1 or 2 values
+;; then we can build up a set of possible traversals
+;; and take the minimum
+
+(let ([cost exls2])
+  (let loop ([costs cost]
+             [paid '()])
+    (match costs
+      [(list a b c ...)
+       (let-values ([(rest-costs candidates) (split-at-right costs 2)])
+         (displayln (format "candidates: ~a rest-costs: ~a paid: ~a" candidates rest-costs paid))
+         (let ([a (first candidates)]
+               [b (second candidates)])
+          (append (loop rest-costs (cons a paid))
+                  (loop (append rest-costs (list a)) (cons b paid)))))]
+      [_ (list paid)])))
+
+
+
+
+;; logic above
+;; if we have more than 2 in list
+;; take back 2
+;; then we want to get the results for both if we take a or if we take b
+(let ([cost exls2])
+  (let loop ([costs cost]
+             [paid '()])
+    (match costs
+      [(list a b c ...)
+       (let-values ([(rest-costs candidates) (split-at-right costs 2)])
+         (displayln (format "candidates: ~a rest-costs: ~a paid: ~a" candidates rest-costs paid))
+         (let ([a (first candidates)]
+               [b (second candidates)])
+          (append (loop rest-costs (cons a paid))
+                  (loop (append rest-costs (list a)) (cons b paid)))))]
+      [_ (list paid)])))
+
+
+;; alternative
+;; it will likely never be sets of 1
+;; what if we got all partitions of min-jumps -> len
+;; where min-jumps is len quotient 2?
+
+(map (curry apply min)
+     (map (λ (set)
+            (map (curry apply +) set))
+          (let* ([cost exls2]
+                 [min-jumps (quotient (length exls2) 2)])
+            (map (curry combinations cost) (range min-jumps (length cost))))))
+
+;; maybe we could stream combinations
+;; and break the sampling if a later set min is higher than a previous set
+
+
+
+;; logic above
+;; if we have more than 2 in list
+;; take back 2
+;; then we want to get the results for both if we take a or if we take b
+(apply min (let ([cost exls])
+  (map (curry apply +)
+       (let loop ([costs cost]
+             [paid '()])
+    (match costs
+      [(list a b c ...)
+       (let-values ([(rest-costs candidates) (split-at-right costs 2)])
+         (displayln (format "candidates: ~a rest-costs: ~a paid: ~a" candidates rest-costs paid))
+         (let ([a (first candidates)]
+               [b (second candidates)])
+          (append (loop rest-costs (cons a paid))
+                  (loop (append rest-costs (list a)) (cons b paid)))))]
+      [_ (list paid)])))))
+
+(define (min-cost-climbing-stairs cost)
+  (apply min
+         (map (curry apply +)
+              (let loop ([costs cost]
+                         [paid '()])
+                (match costs
+                  [(list a b c ...)
+                   (let-values ([(rest-costs candidates) (split-at-right costs 2)])
+                     (match candidates
+                       [(list a b)
+                        (append (loop rest-costs (cons a paid))
+                               (loop (append rest-costs (list a)) (cons b paid)))]))]
+                  [_ (list paid)])))))
+
+;; memory limit exceeded!
+(min-cost-climbing-stairs exls)
+(min-cost-climbing-stairs exls1)
+(min-cost-climbing-stairs exls2)
+
+
+(let ([cost exls])
+  (apply min
+         (map (curry apply +)
+              (let loop ([costs cost]
+                         [paid '()])
+                (match costs
+                  [(list a b c ...)
+                   (let-values ([(rest-costs candidates) (split-at-right costs 2)])
+                     (match candidates
+                       [(list a b)
+                        (append (loop rest-costs (cons a paid))
+                                (loop (append rest-costs (list a)) (cons b paid)))]))]
+                  [_ (list paid)])))))
+
+;; we can fix this with memoization
+;; or we can just add the values lol
+
+(let ([cost exls2])
+
+  )
+
+
+(define (min-cost-climbing-stairs cost)
+  (let ([paths (let loop ([costs cost]
+                    [paid 0])
+           (match costs
+             [(list a b c ...)
+              (let-values ([(rest-costs candidates) (split-at-right costs 2)])
+                (match candidates
+                  [(list a b)
+                   (append (loop rest-costs (+ a paid))
+                           (loop (append rest-costs (list a)) (+ b paid)))]))]
+             [_ (list paid)]))])
+    (apply min paths)))
+
+
+;; with soln
+(let ([cost exls])
+  (let ([n (length cost)]
+        [dp (make-hash)])
+    (define (min-cost n)
+      (displayln (format "~a ~a" n dp))
+      (match n
+        [(? negative?) 0]
+        [(or 0 1) (list-ref cost n)]
+        [(? (not (zero? (hash-ref dp n 0)))) (hash-ref dp n 0)]
+        [_ (begin
+             (hash-set! dp n (+ (list-ref cost n)
+                                (min (min-cost (sub1 n))
+                                     (min-cost (sub1 (sub1 n))))))
+             (hash-ref dp n))]))
+    (min (min-cost (sub1 n)) (min-cost (sub1 (sub1 n))))))
+
+
+;; try again
+;; (1 100 1 1 1 100 1 1 100 1).
+;; we want to keep track of our current step
+;; and our previous 2 steps
+;; for our step, we want to minimize by taking either (+ n n-1) or (+ n n-2)
+(let ([cost exls])
+  (for/fold ([n-2 0]
+             [n-1 0]
+             #:result (min n-1 n-2))
+            ([n cost])
+    (values n-1 (min (+ n n-1) (+ n n-2)))))
+
+;; start at index 0
+;; (1 100 1 1 1 100 1 1 100 1)
+;;
+
+(define (min-cost-climbing-stairs cost)
+  (for/fold ([n-2 0]
+             [n-1 0]
+             #:result (min n-1 n-2))
+            ([n cost])
+    (values n-1 (min (+ n n-1) (+ n n-2)))))
