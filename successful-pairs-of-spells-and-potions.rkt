@@ -9,6 +9,9 @@
 (define expotions '(8 5 8))
 (define exsuccess 16)
 
+(define exspells '(15 8 19))
+(define expotions '(38 36 23))
+(define exsuccess 328)
 
 
 ;; (5 1 3)
@@ -183,6 +186,8 @@ l: 3 r: 4 m: 3 e: 4
 (bs-partition (λ (n) (< (* n 3) 7)) '(1 2 3 4 5))
 (bs-partition (λ (n) (< (* n 3) 16)) '(8 5 8))
 
+
+
 (define (successful-pairs spells potions success)
   (for/list ([spell spells])
     (let-values ([(fail success) (bs-partition (λ (potion) (< (* potion spell) success)) potions)])
@@ -191,3 +196,63 @@ l: 3 r: 4 m: 3 e: 4
 (successful-pairs exspells expotions 7)
 
 ;; not there yet!
+
+;; try again with the binary-partition
+;; idea
+;; we have a list
+;; (1 2 3 4 5)
+;; start with l: 0 r: 4 m: (l + r) // 2
+;; if v[m] is true, then move the right point to (sub1 mid)
+;; if v[m] is false,
+;;   check if v[m + 1] is true
+;;    if so,
+;;      return m
+;;    otherwise
+;;      move the left point to (add1 mid)
+
+
+(for/list ([j exspells])
+  (let ([ls expotions]
+        [pred? (λ (n) (>= (* n j) exsuccess))])
+    (let ([vec (list->vector ls)])
+      (let loop ([lhs 0]
+                 [rhs (sub1 (vector-length vec))])
+        (if (> lhs rhs)
+            #f
+            (let* ([midpoint (quotient (+ lhs rhs) 2)]
+                   [middle-element (vector-ref vec midpoint)])
+              (displayln (format "l: ~a r: ~a m: ~a e: ~a" lhs rhs midpoint middle-element))
+              (match (pred? middle-element)
+                [#t (cond [(not (pred? (vector-ref vec (sub1 midpoint)))) midpoint]
+                          [else (loop lhs (sub1 rhs))])]
+                [_ (loop (add1 midpoint) rhs)])))))))
+
+(define (binary-partition pred ls)
+  (define (get-breakpoint vec)
+    (let loop ([lhs 0]
+               [rhs (sub1 (vector-length vec))])
+      (if (> lhs rhs)
+          (values (vector-length vec))
+          (let* ([midpoint (quotient (+ lhs rhs) 2)]
+                 [middle-element (vector-ref vec midpoint)])
+            ;; (displayln (format "l: ~a r: ~a m: ~a e: ~a" lhs rhs midpoint middle-element))
+            (match (pred middle-element)
+              [#t (cond [(zero? midpoint) midpoint]
+                        [(not (pred (vector-ref vec (sub1 midpoint)))) midpoint]
+                        [else (loop lhs (sub1 rhs))])]
+              [_ (loop (add1 midpoint) rhs)])))))
+  (let ([vec (list->vector (sort ls <))])
+    (split-at ls (get-breakpoint vec))))
+
+(define (successful-pairs spells potions success)
+  (for/list ([spell spells])
+  (let-values ([(_ success) (binary-partition (λ (n) (>= (* n spell) success)) potions)])
+    (length success))))
+
+(for/list ([spell exspells])
+  (let-values ([(_ success) (binary-partition (λ (n) (>= (* n spell) exsuccess)) expotions)])
+    (length success)))
+
+
+;; try solutions solution
+;; above is too slow with vector
