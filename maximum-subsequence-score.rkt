@@ -102,3 +102,128 @@
     ))
 
 ;; look up neetcode lol
+(require data/heap)
+
+(let ([nums1 exnums1]
+      [nums2 exnums2]
+      [k exk])
+  (let ([pairs (sort (map cons nums1 nums2) #:key cdr >)]
+        [hp (make-heap <)]
+        [n1-sum 0])
+    (for/fold ([results 0]
+               #:result (displayln results))
+              ([pair pairs])
+      (displayln (format "pair: ~a n1-sum: ~a" pair n1-sum))
+      (let ([min-val (cdr pair)]
+            [n1 (car pair)])
+        (begin
+          ;; add n1 to heap
+          (heap-add! hp n1)
+          ;; get sum
+          (set! n1-sum (+ n1-sum n1))
+          ;;
+          (let ([num-eles (heap-count hp)])
+            (cond [(> num-eles k)
+                   (begin
+                     (let ([n1-min (heap-min hp)])
+                       (heap-remove-min! hp)
+                       (set! n1-sum (- n1-sum n1-min)))
+                     (values results))]
+                  [(= num-eles k)
+                   (displayln (format "res: ~a n1-sum: ~a min-val: ~a" results n1-sum min-val))
+                   (values (max results (* n1-sum min-val)))]))
+          (values results))))))
+
+
+;; ok, so we want to keep a minheap of nums1 that is k elements long
+;; and we can just keep cdr pair as the min
+;; as we move along, we want to keep the max value of (+ a b c)_1 * min_2
+;;
+
+;; making it super complicated
+;; due to the mutation
+;; make it /simple and clean/
+
+
+(let ([nums1 exnums1]
+      [nums2 exnums2]
+      [k exk])
+  (let ([pairs (sort (map cons nums1 nums2) #:key cdr >)]
+        [hp (make-heap <)]
+        [n1-sum 0])
+    (for/fold ([results 0]
+               #:result (displayln results))
+              ([pair pairs])
+      (displayln (format "pair: ~a n1-sum: ~a" pair n1-sum))
+      (let ([min-val (cdr pair)]
+            [n1 (car pair)])
+        (begin
+          (heap-add! hp n1)
+          (set! n1-sum (+ n1-sum n1))
+          (when (> (heap-count hp) k)
+            (let ([n1-min (heap-min hp)])
+              (heap-remove-min! hp)
+              (set! n1-sum (- n1-sum n1-min))))
+          (if (= (heap-count hp) k)
+              (begin
+                (displayln (format "res: ~a n1-sum: ~a min-val: ~a" results n1-sum min-val))
+                (values (max results (* n1-sum min-val))))
+              (values results))))))
+          )
+
+(define (max-score nums1 nums2 k)
+  (let ([pairs (sort (map cons nums1 nums2) #:key cdr >)]
+        [hp (make-heap <)]
+        [n1-sum 0])
+    (for/fold ([results 0])
+              ([pair pairs])
+      (let ([min-val (cdr pair)]
+            [n1 (car pair)])
+          (heap-add! hp n1)
+          (set! n1-sum (+ n1-sum n1))
+          (when (> (heap-count hp) k)
+            (let ([n1-min (heap-min hp)])
+              (heap-remove-min! hp)
+              (set! n1-sum (- n1-sum n1-min))))
+          (if (= (heap-count hp) k)
+              (values (max results (* n1-sum min-val)))
+              (values results))))))
+
+(max-score exnums1 exnums2 exk)
+
+
+(define (max-score nums1 nums2 k)
+  (define-values (pairs hp n1-sum)
+    (values (sort (map cons nums1 nums2) #:key cdr >) (make-heap <) 0))
+  (for/fold ([results 0])
+            ([pair pairs])
+    (let ([min-val (cdr pair)]
+          [n1 (car pair)])
+      (heap-add! hp n1)
+      (set! n1-sum (+ n1-sum n1))
+      (when (> (heap-count hp) k)
+        (let ([n1-min (heap-min hp)])
+          (heap-remove-min! hp)
+          (set! n1-sum (- n1-sum n1-min))))
+      (if (= (heap-count hp) k)
+          (values (max results (* n1-sum min-val)))
+          (values results)))))
+
+
+;; with do!
+;; leetcode's version of racket doesn't support this yet
+(define (max-score nums1 nums2 k)
+  (define-values (pairs hp n1-sum)
+    (values (sort (map cons nums1 nums2) #:key cdr >) (make-heap <) 0))
+  (for/fold ([results 0])
+            ([pair pairs]
+             #:do [(match-define (cons n1 min-val) pair)])
+      (heap-add! hp n1)
+      (set! n1-sum (+ n1-sum n1))
+      (when (> (heap-count hp) k)
+        (let ([n1-min (heap-min hp)])
+          (heap-remove-min! hp)
+          (set! n1-sum (- n1-sum n1-min))))
+      (if (= (heap-count hp) k)
+          (values (max results (* n1-sum min-val)))
+          (values results))))
