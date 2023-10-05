@@ -106,16 +106,51 @@
 
 (define grid (grid->vec exgrid))
 
+(define grid (grid->vec '((2 1 1)
+                          (0 1 1)
+                          (1 0 1))))
+
+(define grid (grid->vec '((0 2))))
+
+(define grid (grid->vec '((1))))
+
+(define grid (grid->vec '((0))))
+
+(define grid (grid->vec '((1 2))))
+
+
+(define grid (grid->vec
+              '((2 0 1 1 1 1 1 1 1 1)
+                (1 0 1 0 0 0 0 0 0 1)
+                (1 0 1 0 1 1 1 1 0 1)
+                (1 0 1 0 1 0 0 1 0 1)
+                (1 0 1 0 1 0 0 1 0 1)
+                (1 0 1 0 1 1 0 1 0 1)
+                (1 0 1 0 0 0 0 1 0 1)
+                (1 0 1 1 1 1 1 1 0 1)
+                (1 0 0 0 0 0 0 0 0 1)
+                (1 1 1 1 1 1 1 1 1 1))))
+
+
 (let ([num-mins 0])
-  (for* ([x (vector-length (vector-ref grid 0))]
-         [y (vector-length grid)])
-    (when (= 2 (vector-ref-2 grid x y))
-      (let* ([adj-grid (get-adjacent grid x y)]
-             [rot-coords (get-rot-coords adj-grid x y)])
-        (when (not (empty? rot-coords))
-            (set! num-mins (add1 num-mins))
-            (update-rot-coords! grid rot-coords)))))
-  num-mins)
+  (if (not (findf-grid (curry = 1) grid))
+      0
+      (begin
+        (for* ([x (vector-length (vector-ref grid 0))]
+               [y (vector-length grid)])
+          (when (= 2 (vector-ref-2 grid x y))
+            (let* ([adj-grid (get-adjacent grid x y)]
+                   [rot-coords (get-rot-coords adj-grid x y)])
+              (displayln (format "adj: ~a rot: ~a" adj-grid rot-coords))
+              (when (not (empty? rot-coords))
+                (set! num-mins (add1 num-mins))
+                (update-rot-coords! grid rot-coords)))))
+        (cond [(not (findf-grid (curry = 2) grid)) -1]
+              [(= num-mins 0) 0]
+              [(findf-grid (curry = 1) grid) -1]
+              [else (max 1 (sub1 num-mins))]))))
+
+(findf-grid (curry = 1) grid)
 
 (rot (get-adjacent grid 0 0) 0 0)
 
@@ -132,6 +167,45 @@
 ;;        (apply (curry update-grid-position! grid 2) c)
 ;;        (displayln (format "grid: ~a" grid)))))
 
+(define (grid->vec grid)
+  (vector-map list->vector (list->vector grid)))
+
+(define (get-element grid x y)
+  (cond [(or (negative? x)
+             (negative? y)
+             (> x (sub1 (vector-length (vector-ref grid 0))))
+             (> y (sub1 (vector-length grid)))) -1]
+        [else
+         (let ([y-row (vector-ref grid y)])
+           (vector-ref y-row x))]))
+
+(define (get-adjacent grid x y)
+  (filter (compose not negative? cdr)
+          (map (λ (ls dir) (cons dir (apply (curry get-element grid) ls)))
+               (list
+                (list x (sub1 y))  ;; N
+                (list (add1 x) y)  ;; E
+                (list x (add1 y))  ;; S
+                (list (sub1 x) y)) ;; W
+               (list #\n #\e #\s #\w))))
+
+(define (get-location dir x y)
+  (match dir
+    [#\n (list x (sub1 y))]
+    [#\e (list (add1 x) y)]
+    [#\s (list x (add1 y))]
+    [#\w (list (sub1 x) y)]))
+
+(define (update-grid-position! grid v x y)
+  (when (and (not (negative? x))
+             (not (negative? y)))
+    (let ([tbm (vector-ref grid y)])
+      (vector-set! tbm x v)
+      (vector-set! grid y tbm))))
+
+(define (vector-ref-2 grid x y)
+  (vector-ref (vector-ref grid y) x))
+
 (define (get-rot-coords adj-list orig-x orig-y)
   (map (λ (pair) (get-location (car pair) orig-x orig-y))
        (filter (λ (p) (= 1 (cdr p))) adj-list)))
@@ -139,3 +213,29 @@
 (define (update-rot-coords! grid coords [v 2])
   (for ([c coords])
        (apply (curry update-grid-position! grid v) c)))
+
+(define (findf-grid pred grid)
+  (for*/or ([x (in-range (vector-length (vector-ref grid 0)))]
+            [y (in-range (vector-length grid))])
+    (pred (get-element grid x y))))
+
+(define (oranges-rotting grid)
+  (let ([num-mins 0]
+        [grid (grid->vec grid)])
+    (if (not (findf-grid (curry = 1) grid))
+      0
+      (begin
+        (for* ([x (vector-length (vector-ref grid 0))]
+               [y (vector-length grid)])
+          (when (= 2 (vector-ref-2 grid x y))
+            (let* ([adj-grid (get-adjacent grid x y)]
+                   [rot-coords (get-rot-coords adj-grid x y)])
+              (when (not (empty? rot-coords))
+                (set! num-mins (add1 num-mins))
+                (update-rot-coords! grid rot-coords)))))
+        (cond [(not (findf-grid (curry = 2) grid)) -1]
+              [(= num-mins 0) 0]
+              [(findf-grid (curry = 1) grid) -1]
+              [else (max 1 (sub1 num-mins))])))))
+
+(oranges-rotting grid)
