@@ -1,0 +1,124 @@
+from operator import sub, add
+from typing import Any
+from functools import reduce
+
+
+def flatten(ls: list[Any]):
+    return reduce(add, explates)
+
+
+class PlateIndexer():
+    def __init__(self, plates):
+        self.plate_indexes = {}
+        for idx, plate in enumerate(plates):
+            if plate not in self.plate_indexes:
+                self.plate_indexes[plate] = idx
+        self.num_plates = len(plates)
+
+    def get_insertion_details(self, plate1: str, plate2: str | None = None) -> tuple[int, bool]:
+        plates = [plate for plate in [plate1, plate2] if plate]
+        needs_flip = False
+
+        match plates:
+            case [a]:
+                # we have a single plate,
+                # we want keep our idx the same, but increment the rest of them
+                plate_idx = self.plate_indexes[a]
+                self.num_plates += 1
+
+                for k, v in self.plate_indexes.items():
+                    if v > plate_idx:
+                        self.plate_indexes[k] += 1
+
+            case [a, b] if a == b:
+                # we have 2 plates of the same kind
+                plate_idx = self.plate_indexes[a]
+                self.num_plates += 2
+
+                # now we want to increment everything beyond our plate by 2
+                for k, v in self.plate_indexes.items():
+                    if v > plate_idx:
+                        self.plate_indexes[k] += 2
+
+            case [a, b]:
+                # we want to check if they need to be flipped or not
+                plate_idx1 = self.plate_indexes[a]
+                plate_idx2 = self.plate_indexes[b]
+                self.num_plates += 2
+
+                if plate_idx2 < plate_idx1:
+                    needs_flip = True
+
+                plate_idx = plate_idx1 if needs_flip else plate_idx2
+
+                # we have 2 plates
+                # increment the second plate by 1
+                # and the rest by 2
+                max_val = max(plate_idx1, plate_idx2)
+
+                for k, v in self.plate_indexes.items():
+                    if self.plate_indexes[k] == max_val:
+                        self.plate_indexes[k] += 1
+                    elif v > max_val:
+                        self.plate_indexes[k] += 2
+        return plate_idx, needs_flip
+
+    def reconstruct_plate_pile(self):
+        val_list = list(self.plate_indexes.values()) + [self.num_plates]
+        diff_list = map(sub, val_list[1:], val_list)
+        diff_keys = list(self.plate_indexes.keys())
+
+        return flatten([[plate] * count for plate, count in zip(diff_keys, diff_list)])
+
+
+def main():
+    plates = [
+        "flower-decorated plate",
+        "light green plate",
+        "light green plate",
+        "big blue plate",
+        "big blue plate",
+        "transparent plate",
+    ]
+    plate_indexer = PlateIndexer(plates)
+    
+    insertion_details = plate_indexer.get_insertion_details(
+        "big blue plate"
+    )
+
+    assert insertion_details == (3, False)
+    insertion_details = plate_indexer.get_insertion_details(
+        "big blue plate", "big blue plate"
+    )
+
+    assert insertion_details == (3, False)
+    insertion_details = plate_indexer.get_insertion_details(
+        "flower-decorated plate", "light green plate",
+    )
+    assert insertion_details == (1, False)
+
+    insertion_details = plate_indexer.get_insertion_details(
+        "transparent plate", "big blue plate"
+    )
+    assert insertion_details == (10, True)
+
+    reconstructed_plates = plate_indexer.reconstruct_plate_pile()
+    for plate in reconstructed_plates:
+        print(plate)
+    assert reconstructed_plates == [
+        "flower-decorated plate",
+        "flower-decorated plate",
+        "light green plate",
+        "light green plate",
+        "light green plate",
+        "big blue plate",
+        "big blue plate",
+        "big blue plate",
+        "big blue plate",
+        "big blue plate",
+        "big blue plate",
+        "transparent plate",
+        "transparent plate",
+    ]
+
+main()

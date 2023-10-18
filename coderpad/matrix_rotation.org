@@ -1,0 +1,8 @@
+Matrix rotation
+
+This function is supposed to rotate a square matrix clockwise, but
+it’s not behaving as expected. Can you take a look?
+
+Bonus points if you can keep the computation in-place, without
+significant extra memory (you can declare a few variables but not a
+whole new array 😉)

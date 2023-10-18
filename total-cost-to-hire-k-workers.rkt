@@ -27,13 +27,19 @@
 (define exk 7)
 (define excandidates 12)
 
+(remove-right 5 '(1 2 3 4 5 6 7 6 5 4 3 2 1))
+
+(define excosts '(57 33 26 76 14 67 24 90 72 37 30))
+(define exk 11)
+(define excandidates 2)
+
 (let ([costs excosts]
       [k exk]
       [candidates excandidates])
   (let loop ([costs costs]
              [k k]
              [total-cost 0])
-    (displayln (format "costs: ~a k: ~a total-cost: ~a" costs k total-cost))
+    (displayln (format "costs: ~a \nk: ~a total-cost: ~a\n" costs k total-cost))
     (if (zero? k)
         total-cost
     (let ([lhs (make-heap <=)]
@@ -48,23 +54,33 @@
                      (< lhs-min rhs-min))
                  (loop (remove lhs-min costs) (sub1 k) (+ total-cost lhs-min))]
                 [else
-                 (loop (remove rhs-min costs) (sub1 k) (+ total-cost rhs-min))])))))))
+                 (loop (remove-right rhs-min costs) (sub1 k) (+ total-cost rhs-min))])))))))
+
+
+
+(define (remove-right v ls)
+  (reverse (remove v (reverse ls))))
 
 (define (total-cost costs k candidates)
-  (let loop ([costs costs]
-             [k k]
-             [total-cost 0])
-    (if (zero? k)
-        total-cost
-        (let ([lhs (make-heap <=)]
-              [rhs (make-heap <=)])
-          (begin
-            (heap-add-all! lhs (take costs (min candidates (sub1 (length costs)))))
-            (heap-add-all! rhs (take-right costs (min candidates (sub1 (length costs)))))
-            (let ([lhs-min (heap-min lhs)]
-                  [rhs-min (heap-min rhs)])
-              (cond [(or (= lhs-min rhs-min)
-                         (< lhs-min rhs-min))
-                     (loop (remove lhs-min costs) (sub1 k) (+ total-cost lhs-min))]
-                    [else
-                     (loop (remove rhs-min costs) (sub1 k) (+ total-cost rhs-min))])))))))
+  (cond [(<= (length costs) k) (foldl + 0 costs)]
+        [else
+         (let loop ([costs costs]
+                    [k k]
+                    [total-cost 0])
+           (if (zero? k)
+               total-cost
+               (let ([lhs (make-heap <=)]
+                     [rhs (make-heap <=)])
+                 (begin
+                   (heap-add-all! lhs (take costs (min candidates (sub1 (length costs)))))
+                   (heap-add-all! rhs (take-right costs (min candidates (sub1 (length costs)))))
+                   (let ([lhs-min (heap-min lhs)]
+                         [rhs-min (heap-min rhs)])
+                     (cond [(or (= lhs-min rhs-min)
+                                (< lhs-min rhs-min))
+                            (loop (remove lhs-min costs) (sub1 k) (+ total-cost lhs-min))]
+                           [else
+                            (loop (remove-right rhs-min costs) (sub1 k) (+ total-cost rhs-min))]))))))]))
+
+
+;; time limit exceeded
