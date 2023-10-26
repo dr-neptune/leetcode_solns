@@ -70,8 +70,7 @@ maybe try with a for loop and a break condition?
              (stream-ormap (λ (j) (loop (drop ls j)))
                            (in-inclusive-range (add1 jump-size) 1 -1))]))))
 
-
-(let ([nums exin2])
+(let ([nums exin4])
   (let loop ([ls nums])
     (let ([jump-size (first ls)])
       (displayln (format "~a ~a" jump-size ls))
@@ -81,26 +80,82 @@ maybe try with a for loop and a break condition?
              (for/or ([i (in-inclusive-range jump-size 1 -1)])
                (loop (drop ls i)))]))))
 
+#|
 
-(define (can-jump nums)
+exin5 is also supposed to be false
+the only way we can get there is by iterating through all of the possible jumps with this approach
+
+let's try using memoization to cache some paths
+|#
+
+(let ([nums exin2]
+      [memo (make-hash)])
   (let loop ([ls nums])
     (let ([jump-size (first ls)])
+      (displayln (format "~a ~a ~a" jump-size ls memo))
       (cond [(<= (sub1 (length ls)) jump-size) #t]
             [(zero? jump-size) #f]
             [else
-             (for/or ([i (in-inclusive-range (add1 jump-size) 1 -1)])
-               (loop (drop ls i)))]))))
+             (for/or ([i (in-inclusive-range jump-size 1 -1)])
+               (let ([new-ls (drop ls i)])
+                 (hash-ref memo new-ls (hash-set! memo new-ls jump-size))
+                 (loop (drop ls i))))]))))
 
 
-(define (can-jump nums)
+;;;; nice!
+;; (let ([memo (make-hash)])
+;;   (let loop ([exls '(1 2 3 4 5)])
+;;     (if (empty? exls)
+;;         '()
+;;         (begin
+;;           (hash-ref memo exls (hash-set! memo exls (first exls)))
+;;           (loop (rest exls)))))
+;;   memo)
+
+
+
+(let ([nums exin]
+      [memo (make-hash)])
   (let loop ([ls nums])
     (let ([jump-size (first ls)])
+      ;; (displayln (format "~a ~a ~a" jump-size ls memo))
       (cond [(<= (sub1 (length ls)) jump-size) #t]
             [(zero? jump-size) #f]
             [else
-             (stream-ormap (λ (j) (loop (drop ls j)))
-                           (in-inclusive-range (add1 jump-size) 1 -1))]))))
+             (for/or ([i (in-inclusive-range jump-size 1 -1)])
+               (let ([new-ls (drop ls i)])
+                 (hash-ref memo new-ls (hash-set! memo new-ls jump-size))
+                 (loop new-ls)))]))))
 
-(can-jump exin2)
+#|
+memoization in place. See about using a vector for constant lookups
 
-#| case 2 is broken |#
+|#
+
+
+(let ([nums (list->vector exin5)]
+      [memo (make-hash)])
+  (let loop ([vec nums])
+    (let ([jump-size (vector-ref vec 0)])
+      (displayln (format "~a ~a ~a" jump-size vec memo))
+      (cond [(<= (sub1 (vector-length vec)) jump-size) #t]
+            [(zero? jump-size) #f]
+            [else
+             (for/or ([i (in-inclusive-range jump-size 1 -1)])
+               (let ([new-vec (vector-drop vec i)])
+                 (hash-ref memo new-vec (hash-set! memo new-vec jump-size))
+                 (loop new-vec)))]))))
+
+
+(define (can-jump nums)
+  (let ([memo (make-hash)])
+    (let loop ([vec (list->vector nums)])
+      (let ([jump-size (vector-ref vec 0)])
+        (displayln (format "~a ~a ~a" jump-size vec memo))
+        (cond [(<= (sub1 (vector-length vec)) jump-size) #t]
+              [(zero? jump-size) #f]
+              [else
+               (for/or ([i (in-inclusive-range jump-size 1 -1)])
+                 (let ([new-vec (vector-drop vec i)])
+                   (hash-ref memo new-vec (hash-set! memo new-vec jump-size))
+                   (loop new-vec)))])))))
