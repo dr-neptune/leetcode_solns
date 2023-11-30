@@ -20,44 +20,10 @@ Output: 9
 ;; maybe we can add all the elements to a min-heap
 ;; then we can iterate through the min-heap and count up the maximum streak
 
-(define exls '(0 3 7 2 5 8 4 6 0 1))
-
-(define exls '(100 4 200 1 3 2))
-
-(define exls '(1 2 0 1))
-
-(require data/heap)
-
-(let ([hp (make-heap <=)])
-  (heap-add-all! hp exls)
-  (define min-val (apply min exls))
-  (for/fold ([count 1]
-             [prev min-val]
-             [max-val 1]
-             #:result max-val)
-            ([x (in-heap/consume! hp)])
-    (if (= x (add1 prev))
-        (values (add1 count) x (max (add1 count) max-val))
-        (values 1 x max-val))))
-
-
-(require data/heap)
-
-(define (longest-consecutive nums)
-  (match nums
-    ['() 0]
-    [_ (let ([hp (make-heap <=)])
-         (heap-add-all! hp nums)
-         (define min-val (apply min nums))
-         (for/fold ([count 0]
-                    [prev min-val]
-                    [max-val min-val]
-                    #:result max-val)
-                   ([x (in-heap/consume! hp)])
-           (if (= x (add1 prev))
-               (values (add1 count) x (max (add1 count) max-val))
-               (values 1 x max-val))))]))
-
+(define exls '(0 3 7 2 5 8 4 6 0 1))  ;; 9
+(define exls '(100 4 200 1 3 2))  ;; 4
+(define exls '(1 2 0 1))  ;; 3
+(define exls '(9 1 4 7 3 -1 0 5 8 -1 6))  ;; 7
 
 (require data/heap)
 
@@ -69,10 +35,12 @@ Output: 9
          (heap-add-all! hp nums)
          (define min-val (apply min nums))
          (for/fold ([count 0]
-                    [prev min-val]
-                    [max-val 1]
+                    [prev (sub1 min-val)]
+                    [max-val 0]
                     #:result max-val)
                    ([x (in-heap/consume! hp)])
-           (if (= x (add1 prev))
-               (values (add1 count) x (max (add1 count) max-val))
-               (values 1 x max-val))))]))
+           (cond [(= x (add1 prev)) (values (add1 count) x (max (add1 count) max-val))]
+                 [(= x prev) (values count x max-val)]
+                 [else (values 1 x max-val)])))]))
+
+(longest-consecutive exls)
