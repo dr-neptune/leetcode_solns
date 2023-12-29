@@ -1,45 +1,63 @@
 #lang racket
-(require racket)
+(require racket advent-of-code)
 
-;; idea
-;; make a counter dict for s2
-;; then traverse s1, removing a count for each char
-;; return whatever one is not 0
-
-(define (hash-table-counter ls)
-  (let ([counts (make-hash)])
-    (for-each (λ (v) (hash-update! counts v add1 0)) ls)
-    counts))
+;; helper functions, not related to the problem at hand
+(define (flatten-depth lst [depth 1])
+  "flatten a nested list of lists for `depth` levels"
+  (cond [(<= depth 0) lst]
+        [(not (list? lst)) (list lst)]
+        [else (append-map (lambda (x) (flatten-depth x (sub1 depth))) lst)]))
 
 (define (val-filter ht predicate)
+  "filter a hash table based on values that fit predicate"
   (for/hash ([(k v) (in-hash ht)] #:when (predicate v)) (values k v)))
 
-(define (find-the-difference s t)
-  (let ([ht (hash-table-counter (string->list t))])
-    (for-each (λ (c) (hash-update! ht c sub1)) (string->list s))
-    (first (hash-keys (val-filter ht (λ (v) (not (zero? v))))))))
+;; part 1
+(define bag-draws
+  (map (λ (s) (map string-trim (string-split s ";")))
+       (string-split (fetch-aoc-input (find-session) 2023 2) "\n")))
 
+(define (parse-draws draw-string)
+  #| "2 blue, 1 red, 2 green" -> '((2 . "blue") (1 . "red") (2 . "green")) |#
+  (map
+   (λ (s) (let ([vals (string-split s)])
+            (cons (string->number (first vals))
+                  (last vals))))
+   (map string-trim (string-split draw-string ","))))
 
-(define exstr1 "abcd")
-(define exstr2 "abcde")
-(find-the-difference exstr1 exstr2)
+(define game-hash
+  (let ([games bag-draws])
+    (for*/hash ([game games]
+                [draw game])
+      (let ([game-match (regexp-match* #px"Game \\d+" draw)])
+        (if (not (empty? game-match))
+            (let ([first-draw (regexp-replace* #px"Game \\d+: " draw "")])
+              (values game-match (cons (parse-draws first-draw)
+                                       (map parse-draws (rest game)))))
+            (values game-match (parse-draws draw)))))))
 
-(find-the-difference "" "y")
+;; part 1
+(define draw-max-counts
+  (for/hash ([game (filter (compose not empty?) (hash-keys game-hash))])
+    (values game
+            (map (λ (ls) (apply max (map car ls)))
+                 (group-by cdr (sort (flatten-depth (hash-ref game-hash game))
+                                     #:key cdr string<?))))))
 
+(foldl + 0
+       (map
+        (compose string->number cadr string-split)
+        (flatten
+         (hash-keys
+          (val-filter draw-max-counts
+           (λ (val) (andmap <= val '(14 13 12))))))))
 
-;; try again
-;; idea
-;; traverse both strings at the same time
-;; if char s != char t, return char t
-(define (find-the-difference s t)
-  (let ([sls (sort (string->list s) char<?)]
-        [tls (sort (string->list t) char<?)])
-    (let loop ([s sls]
-               [t tls])
-      (match (list s t)
-        [(list '() a) (first a)]
-        [(list (list a _ ...) (list a _ ...)) (loop (rest s) (rest t))]
-        [_ (first t)]))))
+;; part 2
+;;
 
-(find-the-difference "" "t")
-(find-the-difference "abcd" "abcde")
+(foldl + 0 (hash-map (for/hash ([game (filter (compose not empty?) (hash-keys game-hash))])
+             (values game
+                     (map (λ (ls) (apply max (map car ls)))
+                          (group-by cdr (sort (flatten-depth (hash-ref game-hash game))
+                                              #:key cdr string<?)))))
+          (λ (k v) (apply * v))))
