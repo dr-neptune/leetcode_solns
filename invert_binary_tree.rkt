@@ -16,21 +16,9 @@
                                      (make-tree-node 6)
                                      (make-tree-node 9))))
 
-;; idea
-;; get inorder traversal
-;; reverse it
-
-;; turns out this is a different leetcode medium problem
-
-
-
-;; 1 2 3 4 7
-
-;; recurse to the bottom, and flip left and right
-;;
-
 (define (invert-tree root)
-  (cond [(not root) (tree-node-val root)]))
+  (match root
+    [(tree-node v l r) (tree-node v (invert-tree r) (invert-tree l))]
+    [_ root]))
 
-(define (ls->inorder-tree ls)
-  ())
+(invert-tree extree)

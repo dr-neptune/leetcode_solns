@@ -13,6 +13,7 @@
 (define (make-tree-node [val 0])
   (tree-node val #f #f))
 
+
 (define (inorder-traversal tree)
   (if (not tree)
       '()
@@ -20,6 +21,23 @@
               (list (tree-node-val tree))
               (inorder-traversal (tree-node-right tree)))))
 
-(define extree (tree-node 1 #f (tree-node 2 (tree-node 3 #f #f) #f)))
+(define (sorted-list->inverted-bst lst)
+  (let ([len (length lst)])
+    (if (not (zero? len))
+        (let* ([mid (quotient len 2)]
+               [left-list (take lst mid)]
+               [right-list (drop lst (add1 mid))]
+               [root (make-tree-node (list-ref lst mid))])
+            (set-tree-node-right! root (sorted-list->inverted-bst left-list))
+            (set-tree-node-left! root (sorted-list->inverted-bst right-list))
+            root)
+        #f)))
 
-(inorder-traversal extree2)
+(define/contract (invert-tree root)
+  (-> (or/c tree-node? #f) (or/c tree-node? #f))
+  (if (empty? root)
+      root
+      ((compose sorted-list->inverted-bst inorder-traversal) root)))
+
+
+(invert-tree extree)
