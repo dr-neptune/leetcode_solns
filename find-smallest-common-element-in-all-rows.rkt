@@ -62,3 +62,26 @@ rest lists with lowest value
           (if (all-equal? firsts)
               (first firsts)
               (loop (drop-lowest mat)))))))
+
+
+;; with sets
+(define (smallest-common-element mat)
+  (let ([intersection (set->list (apply set-intersect (map (λ (ls) (for/set ([v ls]) v)) mat)))])
+    (if (empty? intersection)
+        -1
+        (apply min intersection))))
+
+hash
+
+;; with hashmap
+(apply min (hash-keys (apply hash-intersect (map (λ (ls) (for/hash ([v ls]) (values v 0))) exmat) #:combine +)))
+
+
+(define (smallest-common-element mat)
+  (let ([intersection
+         ((compose hash-keys
+                   (λ (ls) (apply hash-intersect ls #:combine +)))
+          (map (λ (ls) (for/hash ([v ls]) (values v 0))) mat))])
+    (if (empty? intersection)
+        -1
+        (apply min intersection))))
