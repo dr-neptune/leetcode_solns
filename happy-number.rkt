@@ -45,7 +45,7 @@ we also need a cycle detecting algorithm
 
 |#
 
-(require (only-in srfi/1 unfold-right)
+(require (only-in srfi/1 unfold-right))
          (only-in srfi/26 cut))
 
 (define (int->digit-list int)

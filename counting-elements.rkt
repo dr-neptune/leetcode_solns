@@ -8,31 +8,17 @@ idea
 |#
 
 (define exls '(1 2 3))
-
+(define exls '(1 1 3 3 5 5 7 7))
 (define exls '(1 1 2 2))
 
-(define (val-filter ht predicate)
-  (for/hash ([(k v) (in-hash ht)] #:when (predicate v)) (values k v)))
-
-(let* ([hsh (make-hash)])
-  (begin
-    (for ([i exls]) (hash-set! hsh i 0))
-    (for ([(k v) (in-hash hsh)])
-      (displayln (format "k: ~a v: ~a hsh: ~a" k v hsh))
-      (when (hash-ref hsh (sub1 k) #f)
-        (hash-update! hsh (sub1 k) add1)))
-    (val-filter hsh (λ (v) (not (zero? v))))))
-
-
+(define (hash-table-counter ls)
+  (let ([counts (make-hash)])
+    (for-each (lambda (v) (hash-update! counts v add1 0)) ls)
+    counts))
 
 (define (count-elements arr)
-  (define (val-filter ht predicate)
-    (for/hash ([(k v) (in-hash ht)] #:when (predicate v)) (values k v)))
-
-  (let* ([hsh (make-hash)])
-    (begin
-      (for ([i arr]) (hash-set! hsh i 0))
-      (for ([(k v) (in-hash hsh)])
-        (when (hash-ref hsh (sub1 k) #f)
-          (hash-set! hsh (sub1 k) 1)))
-      (val-filter hsh (λ (v) (< 0 v))))))
+  (let ([hsh (hash-table-counter arr)])
+    (for/sum ([ele (remove-duplicates arr)]
+              #:do [(define prev-val-count (hash-ref hsh (sub1 ele) #f))]
+              #:when prev-val-count)
+      prev-val-count)))
