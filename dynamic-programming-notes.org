@@ -172,3 +172,6 @@ Here is a bottom up implementation:
                                 (vector-ref vec (- i 2)))))
         (vector-ref vec (sub1 n)))))
 #+end_src
+
+
+** Example 198 House Robber
