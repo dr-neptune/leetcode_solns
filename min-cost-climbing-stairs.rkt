@@ -269,6 +269,22 @@
   (dp (sub1 (length cost))))
 
 
+
+(let ([cost '(10 15 20)])
+  (define hsh (make-hash))
+  (define (dp i)
+    (match i
+      [0 (list-ref cost i)]
+      [1 (min (list-ref cost 0)
+              (list-ref cost 1))]
+      [_
+       (begin
+         (when (not (hash-has-key? hsh i))
+           (hash-set! hsh i (min (+ (list-ref cost i) (dp (sub1 i))) (+ (list-ref cost i) (dp (- i 2))))))
+         (hash-ref hsh i))]))
+  (dp (sub1 (length cost))))
+
+
 (define (min-cost-climbing-stairs cost)
   (define hsh (make-hash))
   (define (dp i)
