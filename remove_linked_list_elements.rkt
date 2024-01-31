@@ -46,6 +46,7 @@
        (go rest (lambda (n) (set-list-node-next! lst n)))]
       [#f (void)]))
   (unbox top))
+xb
 
 ;; fancier version of above with less boilerplate
 (define (remove-elements head val)
