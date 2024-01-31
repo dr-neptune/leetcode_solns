@@ -1,0 +1,177 @@
+#+TITLE: Dynamic Programming Notes
+
+These are notes from
+https://leetcode.com/explore/learn/card/dynamic-programming/
+
+* Intro to Dynamic Programming
+
+DP is used to solve problems that have the following characteristics:
+
+1. The problem can be broken down into overlapping sub-problems
+2. The problem has an optimal sub-structure - an optimal solution can
+   be formed from optimal solutions to the overlapping subproblems of
+   the original problem
+
+Greedy problems have optimal sub-structure, but not overlapping
+subproblems. Divide and Conquer algorithms break a problem into
+sub-problems, but these subproblems are not overlapping (e.g. if you needed
+f(4) to calculate both f(5) and f(6) in the fibonacci sequence)
+
+** Top Down and Bottom Up
+
+There are 2 ways to implement a DP algorithm:
+
+1. Bottom-up, also known as tabulation
+2. Top-down, also known as memoization
+
+*** Tabulation
+
+Tabulation is implemented with iteration and starts at the base
+cases. For example, with fibonacci, we would use the base cases (f(0)
+= f(1) = 1) and use those to calculate f(3) and so on all the way up
+to f(n).
+
+#+begin_src racket
+  (define (tabulation-fib n)
+    (cond [(or (zero? n) (equal? 1 n)) 1]
+          [else
+           (let ([vals (make-vector n 0)])
+             (begin
+               (vector-set! vals 0 1)
+               (vector-set! vals 1 1)
+               (for ([idx (in-range 2 n)])
+                 (vector-set! vals idx (+ (vector-ref vals (sub1 idx))
+                                          (vector-ref vals (- idx 2))))))
+             vals)]))
+
+  ;; (tabulation-fib 8) => #(1 1 2 3 5 8 13 21 34)
+#+end_src
+
+boy howdy that is ugly
+
+*** Memoization
+
+*memoizing* a result means to store the result of a function call,
+usually in a hashmap or an array, so that when the same function call
+is made again, we can simply return the *memoized* result instead of
+recalculating the result.
+
+#+begin_src racket
+  (define (memoize-fib n)
+    (let ([hsh (make-hash)])
+      (define (mem-helper val update)
+        (if (hash-has-key? hsh val)
+            (hash-ref hsh val)
+            (begin
+              (hash-set! hsh val update)
+              update)))
+      (let loop ([idx n])
+        (match idx
+          [(or 0 1) 1]
+          [_
+           (let ([fib-val (+ (loop (sub1 idx))
+                             (loop (- idx 2)))])
+             (mem-helper idx fib-val))]))))
+
+  (memoize-fib 8)  ;; => 34
+
+  ;; resource pseudocode translation
+  (let ([hsh (make-hash)])
+    (define (memoize-fib n)
+      (if (or (zero? n) (= 1 n))
+          1
+          (begin
+            (when (not (hash-has-key? hsh n))
+              (hash-set! hsh n (+ (memoize-fib (sub1 n))
+                                  (memoize-fib (- n 2))))
+              (displayln (format "n: ~a hsh: ~a" n hsh)))
+            (hash-ref hsh n))))
+    (memoize-fib 8))  ;; => 34
+#+end_src
+
+** When to use DP
+
+The *first characteristic* is that the problem will ask for the optimum
+value (max or min) or something, or the number of ways there are to do
+something.
+
+For example:
+
+- What is the min cost of doing...
+- What is the max profit from...
+- How many ways are there to do...
+- What is the longest possible...
+- Is it possible to reach a certain point...
+
+This is helpful, but not sufficient. Greedy algorithms also follow
+this format, but they don't have overlapping subproblems.
+
+The *second characteristic* is that future 'decisions' depend on earlier
+decisions. Doing something at one step affects another step. This
+characteristic makes greedy problems invalidated.
+
+
+* Framework for DP problems
+
+In a DP problem, a *state* is a set of variables that can sufficiently
+describe a scenario.
+
+** The Framework
+
+To solve a DP problem, we need to combine 3 things:
+
+1. A function or data structure that will compute/contain the answer
+   to the problem for every given state
+
+2. A recurrence relation to transition between states
+
+3. base cases, so that our recurrence relation doesn't go on
+   infinitely
+
+** Example Implementations
+
+#+begin_src racket
+(define (climb-stairs n)
+  (define (dp i)
+    ;; base cases
+    (if (<= i 2)
+        i
+        ;; recurrence relation
+        (+ (dp (sub1 i)) (dp (- i 2)))))
+  (dp n))
+#+end_src
+
+This works, but it hasn't memoized anything
+
+Without the memoization, this is just recursion.
+
+#+begin_src racket
+(define (climb-stairs n)
+  (let ([hsh (make-hash)])
+    (define (dp i)
+      (if (<= i 2)
+          i
+          (begin
+            (when (not (hash-has-key? hsh i))
+              (hash-set! hsh i (+ (dp (sub1 i)) (dp (- i 2)))))
+            (hash-ref hsh i))))
+    (dp n)))
+#+end_src
+
+Here is a bottom up implementation:
+
+#+begin_src racket
+(define (climb-stairs n)
+  (if (or (zero? n) (= n 1))
+      1
+      (let ([vec (make-vector n 0)])
+        (vector-set! vec 0 1)
+        (vector-set! vec 1 2)
+        (for ([i (in-range 2 n)])
+          (vector-set! vec i (+ (vector-ref vec (sub1 i))
+                                (vector-ref vec (- i 2)))))
+        (vector-ref vec (sub1 n)))))
+#+end_src
+
+
+** Example 198 House Robber

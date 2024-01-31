@@ -241,3 +241,61 @@
              #:result (min n-1 n-2))
             ([n cost])
     (values n-1 (min (+ n n-1) (+ n n-2)))))
+
+
+;; for dp explore
+
+;; recursive case
+;; dp(i) = (min (+ cost dp(i - 1)), (+ cost dp(i - 2)))
+
+;; base case
+;; 1 step -> step cost
+;; 2 steps -> min(step1, step2)
+
+;; go down steps backwards
+
+(let ([cost '(1 100 1 1 1 100 1 1 100 1)])
+  (define hsh (make-hash))
+  (define (dp i)
+    (match i
+      [0 (list-ref cost i)]
+      [1 (min (list-ref cost 0)
+              (list-ref cost 1))]
+      [_
+       (begin
+         (when (not (hash-has-key? hsh i))
+           (hash-set! hsh i (min (+ (list-ref cost i) (dp (sub1 i))) (+ (list-ref cost i) (dp (- i 2))))))
+         (hash-ref hsh i))]))
+  (dp (sub1 (length cost))))
+
+
+
+(let ([cost '(10 15 20)])
+  (define hsh (make-hash))
+  (define (dp i)
+    (match i
+      [0 (list-ref cost i)]
+      [1 (min (list-ref cost 0)
+              (list-ref cost 1))]
+      [_
+       (begin
+         (when (not (hash-has-key? hsh i))
+           (hash-set! hsh i (min (+ (list-ref cost i) (dp (sub1 i))) (+ (list-ref cost i) (dp (- i 2))))))
+         (hash-ref hsh i))]))
+  (dp (sub1 (length cost))))
+
+
+(define (min-cost-climbing-stairs cost)
+  (define hsh (make-hash))
+  (define (dp i)
+    (match i
+      [0 (list-ref cost i)]
+      [1 (min (list-ref cost 0)
+              (list-ref cost 1))]
+      [_
+       (begin
+         (when (not (hash-has-key? hsh i))
+           (hash-set! hsh i (min (+ (list-ref cost i) (dp (sub1 i))) (+ (list-ref cost i) (dp (- i 2))))))
+         (hash-ref hsh i))]))
+  (dp (sub1 (length cost))))
+;; lol, leetcode is down

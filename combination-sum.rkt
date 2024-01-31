@@ -71,3 +71,9 @@ then take combinations of size 1 -> target size and keep those that sum to targe
     (flatten-depth (map (compose remove-duplicates (curry map (curryr sort <))) (hash-values hsh)))))
 
 ;; time limit exceeded!
+
+
+#|
+try again
+this time, just take values while there is something left
+|#
