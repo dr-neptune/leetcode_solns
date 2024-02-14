@@ -45,3 +45,17 @@ for each, index-of val >
                ind)))))
 
 ;; time limit exceeded
+
+#|
+
+|#
+
+(let* ([temperatures (list->vector extemp)]
+       [n (vector-length temperatures)]
+       [answer (make-vector n 0)]
+       [stack (make-vector)])
+  (let loop ([temp temperatures]
+             [day (in-range n)])
+    (cond [(and (not (vector-empty? stack))
+                (< (vector-ref temperatures (vector-ref stack -1)) temp))
+           (loop ())])))
